@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Check, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors } from '@/lib/colors';
+import { useRouter } from 'next/navigation';
 
 interface QuizData {
     title: string;
@@ -18,6 +19,7 @@ interface QuizData {
 }
 
 export default function QuizScreen({ quiz }: { quiz: QuizData }) {
+    const router = useRouter();
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -83,7 +85,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                 <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-6 max-w-3xl mx-auto w-full z-10">
                     <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>Résultats du quiz</h1>
                     <button
-                        onClick={() => window.location.reload()}
+                        onClick={() => router.push('/dashboard')}
                         className="p-2 rounded-full transition-colors"
                         style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                     >
@@ -240,6 +242,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                     </div>
                 </div>
                 <button
+                    onClick={() => router.push('/dashboard')}
                     className="p-2 rounded-full transition-colors ml-4"
                     style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                 >

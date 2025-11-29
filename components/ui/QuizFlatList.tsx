@@ -153,6 +153,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                     {sortedQuizzes.map((quiz) => (
                         <div key={quiz.id} className="snap-start flex-shrink-0">
                             <QuizSlideCard
+                                id={quiz.id}
                                 title={quiz.title}
                                 date={quiz.date}
                                 questions={quiz.questions}

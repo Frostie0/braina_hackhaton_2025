@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors } from '@/lib/colors';
+import { useRouter } from 'next/navigation';
 
 interface FlashcardData {
     term: string;
@@ -17,6 +18,7 @@ interface QuizData {
 }
 
 export default function FlashcardScreen({ quiz }: { quiz: QuizData }) {
+    const router = useRouter();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isFlipped, setIsFlipped] = useState(false);
 
@@ -65,6 +67,7 @@ export default function FlashcardScreen({ quiz }: { quiz: QuizData }) {
                     </div>
                 </div>
                 <button
+                    onClick={() => router.push('/dashboard')}
                     className="p-2 rounded-full transition-colors ml-4"
                     style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
                 >
