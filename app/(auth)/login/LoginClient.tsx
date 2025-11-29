@@ -2,33 +2,113 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axiosInstance from '@/lib/api/axios.config';
 import { AuthLayout } from '../../../components/layout/AuthLayout';
 import { FormInput } from '../../../components/ui/FormInput';
 import { PasswordInput } from '../../../components/ui/PasswordInput';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { FormError } from '../../../components/ui/FormError';
-import { useAuthStore } from '../../../lib/store/authStore';
 
 /**
  * Page de connexion (Client Component)
+ * Utilise axios directement avec validation frontend
  */
 export default function LoginClient() {
     const router = useRouter();
-    const { login, isLoading, errors, clearErrors } = useAuthStore();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+
+    // Fonction de validation de l'email
+    const validateEmail = (email: string): boolean => {
+        // Regex pour vérifier le format de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    };
+
+    // Fonction de validation du mot de passe
+    const validatePassword = (password: string): boolean => {
+        // Au minimum 6 caractères
+        return password.length >= 6;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        clearErrors();
 
+        // Réinitialiser les erreurs
+        setErrors({});
+
+        // Validation côté frontend
+        const newErrors: { email?: string; password?: string } = {};
+
+        if (!email) {
+            newErrors.email = 'L\'email est requis';
+        } else if (!validateEmail(email)) {
+            newErrors.email = 'Format d\'email invalide';
+        }
+
+        if (!password) {
+            newErrors.password = 'Le mot de passe est requis';
+        } else if (!validatePassword(password)) {
+            newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
+        }
+
+        // Si des erreurs existent, ne pas envoyer la requête
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        // Envoyer la requête au backend via axios
+        setIsLoading(true);
         try {
-            await login({ email, password });
-            router.push('/');
-        } catch (error) {
-            console.error('Login error:', error);
+            const response = await axiosInstance.post('/v1/user/login', {
+                email: email.trim(),
+                password: password,
+            });
+
+            // Succès - Les tokens sont automatiquement sauvegardés par l'intercepteur axios
+            console.log('✅ Connexion réussie:', response.data);
+
+            if (response.status === 200) {
+                router.push('/dashboard');
+            }
+
+        } catch (error: any) {
+            console.error('❌ Erreur de connexion:', error);
+
+            // Gérer les erreurs du backend
+            if (error.response) {
+                // Le serveur a répondu avec un code d'erreur
+                const status = error.response.status;
+                const errorData = error.response.data;
+
+                if (status === 401) {
+                    setErrors({ general: 'Email ou mot de passe incorrect' });
+                } else if (status === 422) {
+                    // Erreurs de validation du backend
+                    setErrors({
+                        general: errorData.message || 'Données invalides',
+                        email: errorData.errors?.email,
+                        password: errorData.errors?.password,
+                    });
+                } else if (status === 500) {
+                    setErrors({ general: 'Erreur serveur. Veuillez réessayer plus tard.' });
+                } else {
+                    setErrors({ general: errorData.message || 'Une erreur est survenue' });
+                }
+            } else if (error.request) {
+                // La requête a été envoyée mais pas de réponse reçue
+                setErrors({ general: 'Impossible de contacter le serveur. Vérifiez votre connexion.' });
+            } else {
+                // Autre erreur
+                setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
