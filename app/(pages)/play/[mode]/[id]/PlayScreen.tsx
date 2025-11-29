@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import QuizScreen from '@/app/(pages)/quiz/QuizScreen';
 import FlashcardScreen from '@/app/(pages)/flashcard/flashcardScreen';
 import MultiplayerQuizScreen from './MultiplayerQuizScreen';
+import TicTacToeMultiplayerScreen from './TicTacToeMultiplayerScreen';
 
 interface PlayConfig {
     mode: 'quiz' | 'flashcards' | 'exam' | 'multiplayer';
@@ -285,12 +286,12 @@ export default function PlayScreen({ config }: PlayScreenProps) {
             return <QuizScreen quiz={data} />;
         case 'multiplayer':
             return (
-                <MultiplayerQuizScreen
+                <TicTacToeMultiplayerScreen
                     quiz={data}
                     roomCode={config.roomCode || 'DEMO123'}
                     config={config.multiplayerConfig || {
                         questionsPerSession: 10,
-                        maxPlayers: 5,
+                        maxPlayers: 2,
                         timePerQuestion: 15
                     }}
                 />
