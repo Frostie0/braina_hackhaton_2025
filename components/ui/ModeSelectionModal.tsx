@@ -45,6 +45,15 @@ export default function ModeSelectionModal({
             borderColor: 'border-cyan-500/30 hover:border-cyan-500'
         },
         {
+            id: 'exam',
+            title: 'Examen',
+            description: 'Mode évaluation chronométré',
+            icon: <Brain className="w-6 h-6" />,
+            color: 'text-orange-400',
+            bgColor: 'bg-orange-500/10',
+            borderColor: 'border-orange-500/30 hover:border-orange-500'
+        },
+        {
             id: 'multiplayer',
             title: 'Multijoueur',
             description: 'Défiez vos amis',

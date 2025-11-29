@@ -23,13 +23,13 @@ export default async function PlayPage({ params, searchParams }: PageProps) {
     const { questions, shuffle } = await searchParams;
 
     // Validate mode
-    const validModes = ['quiz', 'flashcards', 'multiplayer'] as const;
+    const validModes = ['quiz', 'flashcards', 'exam', 'multiplayer'] as const;
     if (!validModes.includes(mode as any)) {
         redirect('/dashboard');
     }
 
     const config = {
-        mode: mode as 'quiz' | 'flashcards' | 'multiplayer',
+        mode: mode as 'quiz' | 'flashcards' | 'exam' | 'multiplayer',
         quizId: id,
         questionsPerSession: questions ? parseInt(questions) : 10,
         shuffleQuestions: shuffle === 'true'

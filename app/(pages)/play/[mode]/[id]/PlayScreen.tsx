@@ -6,7 +6,7 @@ import QuizScreen from '@/app/(pages)/quiz/QuizScreen';
 import FlashcardScreen from '@/app/(pages)/flashcard/flashcardScreen';
 
 interface PlayConfig {
-    mode: 'quiz' | 'flashcards' | 'multiplayer';
+    mode: 'quiz' | 'flashcards' | 'exam' | 'multiplayer';
     quizId: string;
     questionsPerSession: number;
     shuffleQuestions: boolean;
@@ -263,6 +263,9 @@ export default function PlayScreen({ config }: PlayScreenProps) {
             return <QuizScreen quiz={data} />;
         case 'flashcards':
             return <FlashcardScreen quiz={data} />;
+        case 'exam':
+            // TODO: Créer ExamScreen component avec mode évaluation (pas de feedback immédiat, chronomètre global)
+            return <QuizScreen quiz={data} />;
         case 'multiplayer':
             // TODO: Créer MultiplayerScreen component
             return (

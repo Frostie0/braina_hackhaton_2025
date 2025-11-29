@@ -10,6 +10,8 @@ import Link from 'next/link';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ModeSelectionModal from '@/components/ui/ModeSelectionModal';
 import GamePreferencesModal, { GamePreferences } from '@/components/ui/GamePreferencesModal';
+import MultiplayerConfigModal from '@/components/ui/MultiplayerConfigModal';
+import WaitingRoom from '@/components/ui/WaitingRoom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -21,7 +23,11 @@ export default function QuizDetailsPage() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isModeSelectionOpen, setIsModeSelectionOpen] = useState(false);
     const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+    const [isMultiplayerConfigOpen, setIsMultiplayerConfigOpen] = useState(false);
+    const [isWaitingRoomOpen, setIsWaitingRoomOpen] = useState(false);
     const [selectedMode, setSelectedMode] = useState<string>('');
+    const [roomCode, setRoomCode] = useState('');
+    const [multiplayerConfig, setMultiplayerConfig] = useState<any>(null);
 
     const [showCopied, setShowCopied] = useState(false);
 
@@ -45,10 +51,37 @@ export default function QuizDetailsPage() {
     };
 
     const handleSelectMode = (mode: string) => {
-        // Stocker le mode sélectionné et ouvrir le modal de préférences
         setSelectedMode(mode);
         setIsModeSelectionOpen(false);
-        setIsPreferencesOpen(true);
+
+        if (mode === 'multiplayer') {
+            // Pour le mode multijoueur, ouvrir le modal de configuration multijoueur
+            setIsMultiplayerConfigOpen(true);
+        } else {
+            // Pour les autres modes, ouvrir le modal de préférences standard
+            setIsPreferencesOpen(true);
+        }
+    };
+
+    const handleCreateMultiplayerRoom = (config: any) => {
+        // Générer un code de salle aléatoire
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        setRoomCode(code);
+        setMultiplayerConfig(config);
+        setIsMultiplayerConfigOpen(false);
+        setIsWaitingRoomOpen(true);
+    };
+
+    const handleStartMultiplayerGame = () => {
+        // Démarrer le jeu multijoueur
+        const queryParams = new URLSearchParams({
+            questions: multiplayerConfig.questionsPerSession === 'all' ? '10' : multiplayerConfig.questionsPerSession.toString(),
+            shuffle: 'true',
+            multiplayer: 'true',
+            room: roomCode
+        });
+
+        router.push(`/play/multiplayer/${id}?${queryParams}`);
     };
 
     const handleStartGame = (preferences: GamePreferences) => {
@@ -325,6 +358,25 @@ export default function QuizDetailsPage() {
                     onStart={handleStartGame}
                     mode={selectedMode}
                 />
+
+                <MultiplayerConfigModal
+                    isOpen={isMultiplayerConfigOpen}
+                    onClose={() => setIsMultiplayerConfigOpen(false)}
+                    onCreateRoom={handleCreateMultiplayerRoom}
+                />
+
+                {isWaitingRoomOpen && (
+                    <WaitingRoom
+                        roomCode={roomCode}
+                        currentPlayers={[
+                            { id: '1', name: 'Shadow', avatar: '#8B5CF6', isHost: true }
+                        ]}
+                        maxPlayers={multiplayerConfig?.maxPlayers || 5}
+                        onClose={() => setIsWaitingRoomOpen(false)}
+                        onStartGame={handleStartMultiplayerGame}
+                        isHost={true}
+                    />
+                )}
 
             </motion.div>
         </div>

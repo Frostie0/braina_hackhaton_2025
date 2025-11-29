@@ -41,6 +41,8 @@ export default function GamePreferencesModal({
                 return 'Comment aimeriez-vous jouer?';
             case 'flashcards':
                 return 'Configurez vos flashcards';
+            case 'exam':
+                return 'Configuration du mode examen';
             case 'multiplayer':
                 return 'Paramètres du jeu multijoueur';
             default:
@@ -96,8 +98,8 @@ export default function GamePreferencesModal({
                                                     key={option}
                                                     onClick={() => setQuestionsPerSession(option)}
                                                     className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === option
-                                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                                         }`}
                                                 >
                                                     {option}
