@@ -1,260 +1,337 @@
 'use client';
 
-import React from 'react';
-import { motion, Variants } from 'framer-motion';
-import { LogIn, Menu, Zap, BookOpen, Users, Camera, Lightbulb, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LogIn, Menu, X, ArrowRight, Check, ChevronDown, Plus, Minus, Github, Twitter, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
+import ApplicationLogo from '@/components/ui/ApplicationLogo';
 
-// Composant de l'icône de l'IA (représentant les grandes IA comme Claude/ChatGPT)
-const AIAvatar: React.FC<{ icon: React.ReactNode, name: string }> = ({ icon, name }) => (
-    <div className="flex flex-col items-center p-4 bg-gray-800/70 backdrop-blur-sm rounded-3xl shadow-2xl shadow-purple-900/40 border border-gray-700/50 transform hover:scale-[1.03] transition duration-300">
-        <div className="p-3 bg-white/10 rounded-full mb-3">
-            {icon}
-        </div>
-        <span className="text-sm font-medium text-gray-300">{name}</span>
-    </div>
+// --- Composants UI ---
+
+const SectionHeading = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+    <h2 className={`text-3xl md:text-4xl font-serif font-medium tracking-tight text-white mb-6 ${className}`}>
+        {children}
+    </h2>
 );
 
-// Composant pour l'animation du texte d'accroche
-const AnimatedText = () => {
-    const text = "L'IA qui transforme vos notes en succès académique.";
-    const words = text.split(" ");
-
-    const container: Variants = {
-        hidden: { opacity: 0 },
-        visible: (i = 1) => ({
-            opacity: 1,
-            transition: { staggerChildren: 0.1, delayChildren: 0.04 * i },
-        }),
+const Button = ({ children, variant = 'primary', className = "", ...props }: any) => {
+    const baseStyle = "inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all duration-200";
+    const variants = {
+        primary: "bg-white text-black hover:bg-gray-200",
+        secondary: "bg-gray-800 text-white hover:bg-gray-700 border border-gray-700",
+        outline: "bg-transparent text-white border border-gray-600 hover:border-white",
+        ghost: "bg-transparent text-gray-300 hover:text-white"
     };
-
-    const child: Variants = {
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                damping: 12,
-                stiffness: 100,
-            },
-        },
-        hidden: {
-            opacity: 0,
-            y: 20,
-            transition: {
-                type: "spring",
-                damping: 12,
-                stiffness: 100,
-            },
-        },
-    };
-
     return (
-        <motion.h1
-            className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 text-center"
-            variants={container}
-            initial="hidden"
-            animate="visible"
-        >
-            {words.map((word, index) => (
-                <motion.span
-                    key={index}
-                    variants={child}
-                    className="inline-block mr-2"
-                >
-                    {word}
-                </motion.span>
-            ))}
-        </motion.h1>
+        <button className={`${baseStyle} ${variants[variant as keyof typeof variants]} ${className}`} {...props}>
+            {children}
+        </button>
     );
 };
 
-// Composant principal de la page d'accueil
-const Homepage = () => {
-    // État pour la navigation mobile (simulée)
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+// --- Sections ---
 
-    // Variantes pour l'animation de la section Hero
-    const heroVariants: Variants = {
-        hidden: { opacity: 0, y: 50 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
-    };
-
-    const cardVariants: Variants = {
-        hidden: { opacity: 0, scale: 0.9 },
-        visible: { opacity: 1, scale: 1, transition: { duration: 0.5, delay: 0.5 } },
-    };
+const Navbar = () => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-900 font-sans antialiased text-white">
+        <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <Link href="/" className="flex items-center gap-2">
+                    <ApplicationLogo size={24} />
+                </Link>
 
-            {/* Barre de Navigation (Navbar) */}
-            <header className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
-                <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    {/* Logo/Nom de l'application */}
-                    <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center text-2xl font-bold text-purple-400">
-                        <Zap className="w-6 h-6 mr-2" />
-                        Braina
-                    </motion.div>
+                {/* Desktop Menu */}
+                <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
+                    <a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a>
+                    <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+                    <a href="#" className="hover:text-white transition-colors">Tarifs</a>
+                </div>
 
-                    {/* Liens de Navigation Desktop */}
-                    <div className="hidden md:flex space-x-8 text-gray-300 font-medium">
-                        <a href="#features" className="hover:text-purple-400 transition">Fonctionnalités</a>
-                        <a href="#" className="hover:text-purple-400 transition">Professeurs</a>
-                        <a href="#" className="hover:text-purple-400 transition">Élèves</a>
-                    </div>
-
-                    {/* Bouton de Connexion */}
-                    <Link href="/login">
-                        <motion.button
-                            initial={{ x: 20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            className="hidden md:flex items-center px-4 py-2 bg-purple-600 rounded-full text-white font-semibold hover:bg-purple-700 transition duration-300 shadow-md shadow-purple-500/50"
-                        >
-                            <LogIn className="w-5 h-5 mr-2" />
-                            Se Connecter
-                        </motion.button>
+                <div className="hidden md:flex items-center gap-4">
+                    <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                        Se connecter
                     </Link>
+                    <Link href="/register">
+                        <Button variant="primary" className="py-2 px-4 text-sm">
+                            Essayer Braina
+                        </Button>
+                    </Link>
+                </div>
 
-                    {/* Menu Mobile */}
-                    <button className="md:hidden p-2 text-gray-300" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </nav>
+                {/* Mobile Menu Button */}
+                <button className="md:hidden text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                    {isMenuOpen ? <X /> : <Menu />}
+                </button>
+            </div>
 
-                {/* Menu Mobile Dropdown */}
+            {/* Mobile Menu */}
+            <AnimatePresence>
                 {isMenuOpen && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden px-4 pt-2 pb-4 border-t border-gray-800 space-y-3"
+                        className="md:hidden bg-black border-b border-white/10 overflow-hidden"
                     >
-                        <a href="#features" className="block py-2 text-gray-300 hover:text-purple-400 transition">Fonctionnalités</a>
-                        <a href="#" className="block py-2 text-gray-300 hover:text-purple-400 transition">Professeurs</a>
-                        <a href="#" className="block py-2 text-gray-300 hover:text-purple-400 transition">Élèves</a>
-                        <Link href="/login">
-                            <button className="w-full flex items-center justify-center mt-2 px-4 py-2 bg-purple-600 rounded-full text-white font-semibold hover:bg-purple-700 transition duration-300">
-                                <LogIn className="w-5 h-5 mr-2" />
-                                Se Connecter
-                            </button>
-                        </Link>
+                        <div className="px-6 py-8 flex flex-col space-y-4">
+                            <a href="#features" className="text-lg text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Fonctionnalités</a>
+                            <a href="#faq" className="text-lg text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>FAQ</a>
+                            <a href="#" className="text-lg text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Tarifs</a>
+                            <div className="pt-4 flex flex-col gap-3">
+                                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                                    <Button variant="secondary" className="w-full justify-center">Se connecter</Button>
+                                </Link>
+                                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                                    <Button variant="primary" className="w-full justify-center">Essayer Braina</Button>
+                                </Link>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
-            </header>
+            </AnimatePresence>
+        </nav>
+    );
+};
 
-            {/* Section Hero */}
-            <motion.section
-                className="relative flex flex-col items-center justify-center min-h-[calc(100vh-80px)] overflow-hidden p-4 sm:p-8"
-                variants={heroVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {/* Effet de fond : Gradient et Cercles de lumière */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900"></div>
-                <div className="absolute w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] top-10 left-10 animate-pulse-slow"></div>
-                <div className="absolute w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] bottom-10 right-10 animate-pulse-slow delay-500"></div>
-
-                <div className="relative z-10 max-w-5xl mx-auto">
-                    {/* Titre Animé */}
-                    <AnimatedText />
-
-                    {/* Sous-titre */}
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 1.5, duration: 0.5 }}
-                        className="text-xl sm:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto text-center"
-                    >
-                        Braina utilise la puissance des IA de pointe pour transformer la manière dont vous apprenez et enseignez.
-                    </motion.p>
-
-                    {/* Section des Actions/CTA */}
-                    <div className="flex justify-center space-x-4 mb-16">
+const Hero = () => {
+    return (
+        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden">
+            <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <h1 className="text-5xl md:text-7xl font-serif font-medium text-white leading-[1.1] mb-8">
+                        L'IA qui transforme <br />
+                        <span className="text-gray-400">vos notes en succès.</span>
+                    </h1>
+                    <p className="text-xl text-gray-400 mb-10 max-w-lg leading-relaxed">
+                        Braina utilise la puissance des IA de pointe pour générer instantanément des quiz, des flashcards et des résumés à partir de vos cours.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4">
                         <Link href="/register">
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 1.8, duration: 0.3 }}
-                                className="flex items-center px-8 py-3 bg-purple-600 rounded-full text-lg font-semibold hover:bg-purple-700 transition shadow-xl shadow-purple-500/40"
-                            >
-                                <Zap className="w-5 h-5 mr-2" />
-                                Démarrer Gratuitement
-                            </motion.button>
+                            <Button variant="primary" className="w-full sm:w-auto h-12 px-8 text-lg">
+                                Démarrer gratuitement
+                            </Button>
                         </Link>
-                        <motion.a
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 1.9, duration: 0.3 }}
-                            href="#features"
-                            className="flex items-center px-8 py-3 bg-gray-700/50 border border-gray-600 rounded-full text-lg font-semibold hover:bg-gray-600 transition"
-                        >
-                            Voir les Fonctionnalités
-                        </motion.a>
+                        <Link href="#features">
+                            <Button variant="outline" className="w-full sm:w-auto h-12 px-8 text-lg group">
+                                Voir les fonctionnalités
+                                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                        </Link>
                     </div>
+                </motion.div>
 
-                    {/* Cartes de Fonctionnalités (Professeurs & Élèves) */}
-                    <div id="features" className="grid md:grid-cols-2 gap-8 mt-16">
-
-                        {/* Carte Élèves */}
-                        <motion.div
-                            variants={cardVariants}
-                            transition={{ delay: 2.0 }}
-                            className="bg-gray-800/50 p-6 sm:p-8 rounded-3xl border border-purple-500/30 shadow-xl"
-                        >
-                            <h3 className="text-xl sm:text-2xl font-bold mb-4 text-purple-400 flex items-center">
-                                <BookOpen className="w-6 h-6 mr-3" />
-                                Pour les Élèves : L'étude instantanée
-                            </h3>
-                            <ul className="space-y-3 text-gray-300">
-                                <li className="flex items-start">
-                                    <Camera className="w-5 h-5 mt-1 mr-3 flex-shrink-0 text-cyan-400" />
-                                    <span>**Capturez vos notes :** Prenez une photo de n'importe quel document ou note manuscrite.</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <Lightbulb className="w-5 h-5 mt-1 mr-3 flex-shrink-0 text-cyan-400" />
-                                    <span>**Génération Automatique :** Recevez instantanément des Quiz, des Flashcards et des Résumés.</span>
-                                </li>
-                            </ul>
-                        </motion.div>
-
-                        {/* Carte Professeurs */}
-                        <motion.div
-                            variants={cardVariants}
-                            transition={{ delay: 2.2 }}
-                            className="bg-gray-800/50 p-6 sm:p-8 rounded-3xl border border-cyan-500/30 shadow-xl"
-                        >
-                            <h3 className="text-xl sm:text-2xl font-bold mb-4 text-cyan-400 flex items-center">
-                                <Users className="w-6 h-6 mr-3" />
-                                Pour les Professeurs : Engagement Compétitif
-                            </h3>
-                            <ul className="space-y-3 text-gray-300">
-                                <li className="flex items-start">
-                                    <Zap className="w-5 h-5 mt-1 mr-3 flex-shrink-0 text-purple-400" />
-                                    <span>**Création Rapide de Quiz :** Créez des quiz basés sur vos supports en quelques clics.</span>
-                                </li>
-                                <li className="flex items-start">
-                                    <TrendingUp className="w-5 h-5 mt-1 mr-3 flex-shrink-0 text-purple-400" />
-                                    <span>**Mode Multijoueur :** Lancez des sessions en temps réel, compétitives et ludiques pour toute la classe.</span>
-                                </li>
-                            </ul>
-                        </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="relative"
+                >
+                    <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 shadow-2xl relative">
+                        {/* Abstract UI Representation */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-3/4 h-3/4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-4">
+                                <div className="h-4 w-1/3 bg-white/10 rounded-full animate-pulse" />
+                                <div className="space-y-2">
+                                    <div className="h-2 w-full bg-white/10 rounded-full" />
+                                    <div className="h-2 w-5/6 bg-white/10 rounded-full" />
+                                    <div className="h-2 w-4/6 bg-white/10 rounded-full" />
+                                </div>
+                                <div className="mt-auto flex gap-3">
+                                    <div className="h-20 w-full bg-purple-500/20 rounded-lg border border-purple-500/30 flex items-center justify-center">
+                                        <span className="text-purple-300 text-xs font-mono">Quiz Généré</span>
+                                    </div>
+                                    <div className="h-20 w-full bg-cyan-500/20 rounded-lg border border-cyan-500/30 flex items-center justify-center">
+                                        <span className="text-cyan-300 text-xs font-mono">Flashcards</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </motion.div>
+            </div>
+        </section>
+    );
+};
 
-                    {/* L'image des IA (simulée par des icônes pour le style) */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 2.5, duration: 0.5 }}
-                        className="flex justify-center items-center mt-12 space-x-8"
-                    >
-                        <AIAvatar icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 20 12.1v2.1l-2 1.9c-.8.8-1.7 1.2-2.7 1.2h-3.4l-4 4v-4z" /></svg>} name="ChatGPT" />
-                        <AIAvatar icon={<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C084FC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="M9.9 10.6a2 2 0 1 1 2.8-2.8l2.8-2.8a2 2 0 1 1 2.8 2.8l-2.8 2.8a2 2 0 1 1-2.8 2.8z" /><path d="M4 14l2 2m0 0l2-2m-2 2v4m4 0l2-2m0 0l2 2m-2-2v-4" /></svg>} name="Claude/Gemini" />
-                    </motion.div>
+const FeatureCard = ({ title, description, icon: Icon }: any) => (
+    <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors duration-300">
+        <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-6 text-white">
+            <Icon size={24} />
+        </div>
+        <h3 className="text-xl font-serif text-white mb-3">{title}</h3>
+        <p className="text-gray-400 leading-relaxed">{description}</p>
+    </div>
+);
 
+const Features = () => {
+    return (
+        <section id="features" className="py-24 bg-black px-6">
+            <div className="max-w-7xl mx-auto">
+                <div className="mb-16 md:w-2/3">
+                    <SectionHeading>Tout ce dont vous avez besoin pour exceller.</SectionHeading>
+                    <p className="text-xl text-gray-400">Une suite d'outils complète pour les étudiants et les enseignants.</p>
                 </div>
-            </motion.section>
 
+                <div className="grid md:grid-cols-3 gap-6">
+                    <FeatureCard
+                        title="Génération Instantanée"
+                        description="Transformez vos PDF et images en matériel d'étude interactif en quelques secondes grâce à notre IA avancée."
+                        icon={ArrowRight}
+                    />
+                    <FeatureCard
+                        title="Quiz Intelligents"
+                        description="Des questions générées sur mesure pour tester vos connaissances et identifier vos lacunes rapidement."
+                        icon={Check}
+                    />
+                    <FeatureCard
+                        title="Mode Multijoueur"
+                        description="Rendez l'apprentissage ludique en défiant vos amis ou vos élèves dans des sessions en temps réel."
+                        icon={Github} // Placeholder icon
+                    />
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="border-b border-white/10">
+            <button
+                className="w-full py-6 flex items-center justify-between text-left hover:text-gray-200 transition-colors"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <span className="text-lg font-medium text-white">{question}</span>
+                {isOpen ? <Minus className="text-gray-400" /> : <Plus className="text-gray-400" />}
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <p className="pb-6 text-gray-400 leading-relaxed">
+                            {answer}
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const FAQ = () => {
+    const faqs = [
+        {
+            question: "Qu'est-ce que Braina exactement ?",
+            answer: "Braina est une plateforme d'apprentissage assistée par IA qui convertit vos documents de cours (PDF, images, notes) en quiz interactifs, flashcards et résumés pour optimiser vos révisions."
+        },
+        {
+            question: "Est-ce gratuit ?",
+            answer: "Nous proposons une version gratuite généreuse pour commencer. Des plans premium sont disponibles pour les utilisateurs ayant des besoins plus intensifs."
+        },
+        {
+            question: "Quels types de fichiers sont supportés ?",
+            answer: "Actuellement, nous supportons les images (JPG, PNG) et travaillons activement sur le support PDF complet."
+        },
+        {
+            question: "Comment fonctionne le mode multijoueur ?",
+            answer: "Un utilisateur crée une salle et partage un code. Les autres participants rejoignent la salle pour répondre aux mêmes questions en temps réel."
+        }
+    ];
+
+    return (
+        <section id="faq" className="py-24 bg-black px-6">
+            <div className="max-w-3xl mx-auto">
+                <SectionHeading className="text-center mb-12">Foire aux questions</SectionHeading>
+                <div className="space-y-2">
+                    {faqs.map((faq, index) => (
+                        <FAQItem key={index} question={faq.question} answer={faq.answer} />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const Footer = () => {
+    return (
+        <footer className="bg-black border-t border-white/10 pt-20 pb-10 px-6">
+            <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-20">
+                <div className="col-span-2 lg:col-span-2">
+                    <Link href="/" className="flex items-center gap-2 mb-6">
+                        <ApplicationLogo size={28} />
+                    </Link>
+                    <p className="text-gray-400 max-w-xs mb-8">
+                        L'intelligence artificielle au service de votre réussite académique.
+                    </p>
+                    <div className="flex gap-4">
+                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Twitter size={20} /></a>
+                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Github size={20} /></a>
+                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Linkedin size={20} /></a>
+                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Instagram size={20} /></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="font-medium text-white mb-6">Produit</h4>
+                    <ul className="space-y-4 text-sm text-gray-400">
+                        <li><a href="#" className="hover:text-white transition-colors">Fonctionnalités</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Tarification</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Pour les Écoles</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Mises à jour</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 className="font-medium text-white mb-6">Ressources</h4>
+                    <ul className="space-y-4 text-sm text-gray-400">
+                        <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Guide d'utilisation</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Communauté</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Aide</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 className="font-medium text-white mb-6">Légal</h4>
+                    <ul className="space-y-4 text-sm text-gray-400">
+                        <li><a href="#" className="hover:text-white transition-colors">Confidentialité</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">CGU</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="#" className="hover:text-white transition-colors">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div className="max-w-7xl mx-auto pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p className="text-gray-500 text-sm">© 2025 Braina. Tous droits réservés.</p>
+                <div className="flex gap-6 text-sm text-gray-500">
+                    <span>Fait avec ❤️ pour les étudiants</span>
+                </div>
+            </div>
+        </footer>
+    );
+};
+
+const Homepage = () => {
+    return (
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-purple-500/30">
+            <Navbar />
+            <main>
+                <Hero />
+                <Features />
+                <FAQ />
+            </main>
+            <Footer />
         </div>
     );
 };

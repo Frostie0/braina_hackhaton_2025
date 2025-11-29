@@ -2,19 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthLayout } from '../../../components/layout/AuthLayout';
-import { FormInput } from '../../../components/ui/FormInput';
-import { PasswordInput } from '../../../components/ui/PasswordInput';
-import { SubmitButton } from '../../../components/ui/SubmitButton';
-import { FormError } from '../../../components/ui/FormError';
+import Link from 'next/link';
 import axios from 'axios';
 import { serverIp } from '@/lib/serverIp';
 import { saveUserData, saveAuthTokens } from '@/lib/storage/userStorage';
+import ApplicationLogo from '@/components/ui/ApplicationLogo';
 
-/**
- * Page d'inscription (Client Component)
- * Utilise axios directement avec validation frontend
- */
 export default function RegisterClient() {
     const router = useRouter();
 
@@ -31,35 +24,27 @@ export default function RegisterClient() {
         general?: string;
     }>({});
 
-    // Fonction de validation de l'email
     const validateEmail = (email: string): boolean => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     };
 
-    // Fonction de validation du nom
     const validateName = (name: string): boolean => {
         return name.trim().length >= 3;
     };
 
-    // Fonction de validation du mot de passe
     const validatePassword = (password: string): boolean => {
-        // Au moins 6 caractères
         return password.length >= 6;
     };
 
-    // Fonction de validation de confirmation de mot de passe
     const validateConfirmPassword = (password: string, confirmPassword: string): boolean => {
         return password === confirmPassword;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Réinitialiser les erreurs
         setErrors({});
 
-        // Validation côté frontend
         const newErrors: {
             name?: string;
             email?: string;
@@ -67,41 +52,23 @@ export default function RegisterClient() {
             confirmPassword?: string;
         } = {};
 
-        // Validation du nom complet
-        if (!fullName) {
-            newErrors.name = 'Le nom complet est requis';
-        } else if (!validateName(fullName)) {
-            newErrors.name = 'Le nom doit contenir au moins 3 caractères';
-        }
+        if (!fullName) newErrors.name = 'Le nom complet est requis';
+        else if (!validateName(fullName)) newErrors.name = 'Le nom doit contenir au moins 3 caractères';
 
-        // Validation de l'email
-        if (!email) {
-            newErrors.email = 'L\'email est requis';
-        } else if (!validateEmail(email)) {
-            newErrors.email = 'Format d\'email invalide';
-        }
+        if (!email) newErrors.email = 'L\'email est requis';
+        else if (!validateEmail(email)) newErrors.email = 'Format d\'email invalide';
 
-        // Validation du mot de passe
-        if (!password) {
-            newErrors.password = 'Le mot de passe est requis';
-        } else if (!validatePassword(password)) {
-            newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
-        }
+        if (!password) newErrors.password = 'Le mot de passe est requis';
+        else if (!validatePassword(password)) newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
 
-        // Validation de la confirmation du mot de passe
-        if (!confirmPassword) {
-            newErrors.confirmPassword = 'Veuillez confirmer votre mot de passe';
-        } else if (!validateConfirmPassword(password, confirmPassword)) {
-            newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
-        }
+        if (!confirmPassword) newErrors.confirmPassword = 'Veuillez confirmer votre mot de passe';
+        else if (!validateConfirmPassword(password, confirmPassword)) newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
 
-        // Si des erreurs existent, ne pas envoyer la requête
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
         }
 
-        // Envoyer la requête au backend via axios
         setIsLoading(true);
         try {
             const response = await axios.post(`${serverIp}/user/register`, {
@@ -111,60 +78,29 @@ export default function RegisterClient() {
                 password_confirmation: confirmPassword,
             });
 
-            // Succès - Sauvegarder les tokens et les données utilisateur
-            console.log('✅ Inscription réussie:', response.data);
-
             if (response.status === 200 || response.status === 201) {
                 const { newUser, access_token, refresh_token } = response.data;
-
-                // Sauvegarder les tokens
-                if (access_token && refresh_token) {
-                    saveAuthTokens({ access_token, refresh_token });
-                }
-
-                // Sauvegarder les informations utilisateur
-                if (newUser) {
-                    saveUserData({
-                        userId: newUser.userId,
-                        name: newUser.name,
-                        email: newUser.email,
-                    });
-                }
-
-                // Naviguer vers le dashboard
+                if (access_token && refresh_token) saveAuthTokens({ access_token, refresh_token });
+                if (newUser) saveUserData({ userId: newUser.userId, name: newUser.name, email: newUser.email });
                 router.push('/dashboard');
             }
 
         } catch (error: any) {
             console.error('❌ Erreur d\'inscription:', error);
-
-            // Gérer les erreurs du backend
             if (error.response) {
-                // Le serveur a répondu avec un code d'erreur
                 const status = error.response.status;
                 const errorData = error.response.data;
-
-                if (status === 409) {
-                    setErrors({ general: 'Cet email est déjà utilisé' });
-                } else if (status === 422) {
-                    // Erreurs de validation du backend
+                if (status === 409) setErrors({ general: 'Cet email est déjà utilisé' });
+                else if (status === 422) {
                     setErrors({
                         general: errorData.message || 'Données invalides',
                         name: errorData.errors?.name,
                         email: errorData.errors?.email,
                         password: errorData.errors?.password,
                     });
-                } else if (status === 500) {
-                    setErrors({ general: 'Erreur serveur. Veuillez réessayer plus tard.' });
-                } else {
-                    setErrors({ general: errorData.message || 'Une erreur est survenue' });
-                }
-            } else if (error.request) {
-                // La requête a été envoyée mais pas de réponse reçue
-                setErrors({ general: 'Impossible de contacter le serveur. Vérifiez votre connexion.' });
+                } else setErrors({ general: 'Une erreur est survenue' });
             } else {
-                // Autre erreur
-                setErrors({ general: 'Une erreur est survenue. Veuillez réessayer.' });
+                setErrors({ general: 'Impossible de contacter le serveur' });
             }
         } finally {
             setIsLoading(false);
@@ -172,78 +108,95 @@ export default function RegisterClient() {
     };
 
     return (
-        <AuthLayout>
-            <div className="flex flex-col items-center justify-center mb-8">
-                <h1 className="text-white text-3xl font-semibold tracking-tight mb-2">
-                    Créer un compte
-                </h1>
-                <p className="text-gray-400 text-sm text-center">
-                    Rejoignez la communauté BRAINA pour commencer à apprendre
-                </p>
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-900/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/10 rounded-full blur-[120px]" />
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
-                {/* Message d'erreur général */}
-                <FormError error={errors.general} />
+            <div className="w-full max-w-md relative z-10">
+                <div className="mb-8 text-center">
+                    <Link href="/" className="inline-flex items-center justify-center mb-8 hover:opacity-80 transition-opacity">
+                        <ApplicationLogo size={40} />
+                    </Link>
+                    <h1 className="text-3xl font-serif font-medium text-white mb-2">Créer un compte</h1>
+                    <p className="text-gray-400">Rejoignez Braina pour commencer à apprendre</p>
+                </div>
 
-                {/* Champ Nom Complet */}
-                <FormInput
-                    id="full-name"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Christan Denison Victor"
-                    label="Nom Complet"
-                    error={errors.name}
-                />
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {errors.general && (
+                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                                {errors.general}
+                            </div>
+                        )}
 
-                {/* Champ Email */}
-                <FormInput
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="exemple@domaine.com"
-                    label="Email"
-                    error={errors.email}
-                />
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-300 ml-1">Nom complet</label>
+                            <input
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
+                                placeholder="Jean Dupont"
+                            />
+                            {errors.name && <p className="text-xs text-red-400 ml-1">{errors.name}</p>}
+                        </div>
 
-                {/* Champ Mot de passe */}
-                <PasswordInput
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    label="Mot de passe"
-                    error={errors.password}
-                />
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-300 ml-1">Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
+                                placeholder="nom@exemple.com"
+                            />
+                            {errors.email && <p className="text-xs text-red-400 ml-1">{errors.email}</p>}
+                        </div>
 
-                {/* Aide mot de passe */}
-                <p className="text-xs text-gray-500 -mt-2">
-                    Au moins 8 caractères, 1 majuscule, 1 minuscule et 1 chiffre
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-300 ml-1">Mot de passe</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
+                                placeholder="••••••••"
+                            />
+                            {errors.password && <p className="text-xs text-red-400 ml-1">{errors.password}</p>}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-medium text-gray-300 ml-1">Confirmer le mot de passe</label>
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
+                                placeholder="••••••••"
+                            />
+                            {errors.confirmPassword && <p className="text-xs text-red-400 ml-1">{errors.confirmPassword}</p>}
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-3 px-4 bg-white text-black font-medium rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
+                        >
+                            {isLoading ? 'Inscription en cours...' : 'S\'inscrire'}
+                        </button>
+                    </form>
+                </div>
+
+                <p className="mt-8 text-center text-gray-500 text-sm">
+                    Déjà un compte ?{' '}
+                    <Link href="/login" className="text-white hover:underline underline-offset-4">
+                        Connectez-vous
+                    </Link>
                 </p>
-
-                {/* Champ Confirmer Mot de passe */}
-                <PasswordInput
-                    id="confirm-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    label="Confirmer le mot de passe"
-                    error={errors.confirmPassword}
-                />
-
-                {/* Bouton de soumission */}
-                <SubmitButton isLoading={isLoading} loadingText="Inscription..." className="mt-6">
-                    S'inscrire
-                </SubmitButton>
-            </form>
-
-            {/* Lien Connexion */}
-            <div className="mt-6 text-center text-sm text-gray-400">
-                Déjà un compte ?{' '}
-                <a href="/login" className="text-purple-400 hover:text-purple-300 transition duration-200">
-                    Connectez-vous
-                </a>
             </div>
-        </AuthLayout>
+        </div>
     );
 }

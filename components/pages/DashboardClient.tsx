@@ -2,7 +2,7 @@
 
 // L'IMPORTATION DE useEffect EST CRUCIALE POUR RÉGLER L'ERREUR SSR
 import React, { useState, useEffect } from 'react';
-import { Zap, Mic, BookOpen, Menu, Globe, ScrollText } from 'lucide-react';
+import { Zap, Mic, BookOpen, Menu, Globe, ScrollText, Plus } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Sidebar } from '../layout/Sidebar';
@@ -66,6 +66,7 @@ const adaptBackendQuizToFrontend = (backendQuiz: BackendQuiz): FrontendQuiz => {
         'literature': 'literature',
         'mathématiques': 'math',
         'math': 'math',
+        'maths': 'math',
     };
 
     let category: 'history' | 'science' | 'technology' | 'literature' | 'math' | 'other' = 'other';
@@ -182,7 +183,7 @@ export default function DashboardClient() {
     }, []); // [] garantit que cela ne s'exécute qu'une fois au montage
 
     return (
-        <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
+        <div className="flex h-screen bg-black text-white overflow-hidden font-sans">
 
             {/* Utiliser AnimatePresence pour le menu mobile et l'overlay */}
             <AnimatePresence initial={false}>
@@ -192,7 +193,7 @@ export default function DashboardClient() {
                 {isClient && isSidebarOpen && !isDesktop && (
                     <motion.div
                         key="sidebar-overlay"
-                        className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
                         onClick={() => setIsSidebarOpen(false)}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -217,14 +218,13 @@ export default function DashboardClient() {
             <div className="flex-1 flex flex-col overflow-y-auto">
 
                 {/* Topbar Mobile (Menu Hamburger & Logo) */}
-                <header className="flex lg:hidden items-center justify-between p-4 bg-gray-800 border-b border-gray-700 sticky top-0 z-30">
-                    <div className="flex items-center text-xl font-extrabold text-purple-400">
-                        <Globe className="w-6 h-6 mr-2 text-purple-500" />
+                <header className="flex lg:hidden items-center justify-between p-4 bg-black border-b border-white/10 sticky top-0 z-30">
+                    <div className="flex items-center text-xl font-serif font-medium text-white">
                         BRAINA
                     </div>
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-colors"
+                        className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
                         aria-label="Open menu"
                     >
                         <Menu className="w-6 h-6" />
@@ -232,76 +232,94 @@ export default function DashboardClient() {
                 </header>
 
                 {/* Colonne 2: Contenu Principal */}
-                <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+                <main className="flex-1 p-6 md:p-12 overflow-y-auto max-w-7xl mx-auto w-full">
 
                     {/* Titre d'accueil */}
-                    <h1 className="text-3xl font-bold mb-4 md:mb-8 text-white">
-                        {isLoadingUser ? (
-                            'Chargement...'
-                        ) : user ? (
-                            `Welcome ${user.name}!`
-                        ) : (
-                            'Welcome!'
-                        )}
-                    </h1>
+                    <div className="mb-12">
+                        <h1 className="text-3xl md:text-4xl font-serif font-medium text-white mb-2">
+                            {isLoadingUser ? (
+                                'Bonjour...'
+                            ) : user ? (
+                                `Bonjour, ${user.name}`
+                            ) : (
+                                'Bonjour'
+                            )}
+                        </h1>
+                        <p className="text-gray-400 text-lg">Prêt à apprendre quelque chose de nouveau aujourd'hui ?</p>
+                    </div>
 
                     {/* Message d'erreur */}
                     {error && (
-                        <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
+                        <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
                             {error}
                         </div>
                     )}
 
                     {/* Section Quick Start */}
-                    <section className="mb-10">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-300 border-l-4 border-purple-500 pl-3">Démarrage rapide</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <section className="mb-16">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-serif font-medium text-white">Démarrage rapide</h2>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <Link href='/generate-quiz'>
                                 <QuickStartCard
                                     icon={Zap}
                                     title="Générer un quiz"
-                                    description="Transformez n'importe quel contenu en flashcards, quiz et podcasts."
+                                    description="Transformez vos notes en matériel d'étude interactif."
                                 />
                             </Link>
                             <Link href='/generate-exam'>
                                 <QuickStartCard
                                     icon={ScrollText}
-                                    title="Examen blanc personnalisé"
-                                    description="Créez des examens types État à partir de vos notes, organisés par thématiques."
+                                    title="Examen blanc"
+                                    description="Préparez-vous avec des examens types personnalisés."
                                 />
                             </Link>
                             <QuickStartCard
                                 icon={BookOpen}
                                 title="Tournoi"
-                                description="Participez à des tournois inter-classes, départementaux et nationaux et gagnez des crédits."
+                                description="Défiez vos camarades et grimpez dans le classement."
                                 comingSoon={true}
                             />
-                            {/* <QuickStartCard
-                                icon={Mic}
-                                title="Record"
-                                description="Record audio directly or upload audio files to generate from."
-                            /> */}
                         </div>
                     </section>
 
                     {/* SECTION: CONTINUER L'APPRENTISSAGE (Quiz FlatList avec données dynamiques) */}
-                    {isLoadingQuizzes ? (
-                        <div className="text-center py-10">
-                            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
-                            <p className="mt-4 text-gray-400">Chargement de vos quiz...</p>
+                    <section>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-xl font-serif font-medium text-white">Vos activités récentes</h2>
+                            <button className="text-sm text-gray-400 hover:text-white transition-colors">Voir tout</button>
                         </div>
-                    ) : quizzes.length > 0 ? (
-                        <QuizFlatList quizzes={quizzes} title="Continuer l'apprentissage" />
-                    ) : (
-                        <div className="text-center py-10 bg-gray-800/30 rounded-lg border border-gray-700">
-                            <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                            <p className="text-gray-400 mb-2">Aucun quiz disponible</p>
-                            <p className="text-sm text-gray-500">Créez votre premier quiz pour commencer !</p>
-                        </div>
-                    )}
+
+                        {isLoadingQuizzes ? (
+                            <div className="flex items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl">
+                                <div className="flex flex-col items-center">
+                                    <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
+                                    <p className="text-gray-500 text-sm">Chargement de vos quiz...</p>
+                                </div>
+                            </div>
+                        ) : quizzes.length > 0 ? (
+                            <QuizFlatList quizzes={quizzes} title="" />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 text-gray-500">
+                                    <Plus className="w-6 h-6" />
+                                </div>
+                                <p className="text-gray-400 font-medium mb-1">Aucune activité pour le moment</p>
+                                <p className="text-gray-500 text-sm mb-6">Créez votre premier quiz pour commencer votre apprentissage.</p>
+                                <Link href='/generate-quiz'>
+                                    <button className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                        Créer un quiz
+                                    </button>
+                                </Link>
+                            </div>
+                        )}
+                    </section>
 
                     {/* Panneau de droite sur Mobile (affiché en bas du contenu) */}
-                    <RightPanelMobile />
+                    <div className="mt-12 lg:hidden">
+                        <RightPanelMobile />
+                    </div>
 
                 </main>
             </div>

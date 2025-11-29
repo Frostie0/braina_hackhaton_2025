@@ -232,10 +232,10 @@ export default function PlayScreen({ config }: PlayScreenProps) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+            <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                    <p className="text-gray-400">Chargement du {config.mode}...</p>
+                    <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-400 text-sm">Chargement du {config.mode}...</p>
                 </div>
             </div>
         );
@@ -243,12 +243,12 @@ export default function PlayScreen({ config }: PlayScreenProps) {
 
     if (!data) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-4">Contenu introuvable</h1>
+            <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
+                <div className="text-center max-w-md">
+                    <h1 className="text-2xl font-serif font-medium mb-4">Contenu introuvable</h1>
                     <button
                         onClick={() => router.push('/dashboard')}
-                        className="text-purple-400 hover:underline"
+                        className="px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors font-medium"
                     >
                         Retour au Dashboard
                     </button>
@@ -267,15 +267,14 @@ export default function PlayScreen({ config }: PlayScreenProps) {
             // TODO: Créer ExamScreen component avec mode évaluation (pas de feedback immédiat, chronomètre global)
             return <QuizScreen quiz={data} />;
         case 'multiplayer':
-            // TODO: Créer MultiplayerScreen component
             return (
-                <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                    <div className="text-center">
-                        <h1 className="text-2xl font-bold mb-4">Mode Multijoueur</h1>
-                        <p className="text-gray-400 mb-6">Cette fonctionnalité sera bientôt disponible !</p>
+                <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
+                    <div className="text-center max-w-md">
+                        <h1 className="text-3xl font-serif font-medium mb-4">Mode Multijoueur</h1>
+                        <p className="text-gray-400 mb-8">Cette fonctionnalité sera bientôt disponible !</p>
                         <button
                             onClick={() => router.push(`/quiz/${config.quizId}`)}
-                            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+                            className="px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors font-medium"
                         >
                             Retour au quiz
                         </button>

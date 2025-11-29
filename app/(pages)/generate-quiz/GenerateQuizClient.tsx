@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Plus, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
@@ -198,36 +198,46 @@ export default function GenerateQuizClient() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 flex justify-center py-8">
+        <div className="min-h-screen bg-black flex justify-center py-8 px-4">
             {/* Conteneur principal du formulaire */}
             <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                transition={{ type: 'tween', duration: 0.3 }}
-                className="w-full max-w-lg lg:max-w-4xl bg-gray-900 lg:bg-gray-800 lg:rounded-2xl lg:shadow-xl flex flex-col h-full"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="w-full max-w-4xl flex flex-col"
             >
                 {/* En-tête */}
-                <header className="flex justify-between items-center p-6 border-b border-gray-700">
-                    <h1 className="text-2xl font-bold text-white">Créer un Quiz</h1>
-                    <motion.button
-                        onClick={() => router.push('/dashboard')}
-                        className="p-2 rounded-full text-gray-400 hover:bg-gray-700 transition"
-                        whileTap={{ scale: 0.9 }}
-                        type="button"
-                    >
-                        <X className="w-6 h-6" />
-                    </motion.button>
+                <header className="flex justify-between items-center mb-8">
+                    <div>
+                        <button
+                            onClick={() => router.push('/dashboard')}
+                            className="flex items-center text-gray-400 hover:text-white transition-colors mb-4 group"
+                            type="button"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                            <span className="text-sm">Retour</span>
+                        </button>
+                        <h1 className="text-3xl font-serif font-medium text-white">Créer un Quiz</h1>
+                        <p className="text-gray-400 mt-2">Transformez vos notes en quiz interactif</p>
+                    </div>
                 </header>
 
                 {/* Corps du Formulaire */}
-                <form onSubmit={handleGenerate} className="flex-1 p-6 overflow-y-auto">
+                <form onSubmit={handleGenerate} className="flex-1 space-y-8">
                     {/* Section d'erreur générale */}
-                    <FormError error={error ?? undefined} className="mb-6" />
+                    {error && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                            {error}
+                        </div>
+                    )}
 
                     {/* Section Téléverser */}
-                    <section className="mb-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-white">Téléverser des images</h2>
+                    <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <div className="flex justify-between items-center mb-5">
+                            <div>
+                                <h2 className="text-lg font-serif font-medium text-white">Images sources</h2>
+                                <p className="text-sm text-gray-400 mt-1">Téléversez vos notes ou supports de cours</p>
+                            </div>
                             <span className="text-sm text-gray-500">{files.length}/8</span>
                         </div>
 
@@ -243,12 +253,14 @@ export default function GenerateQuizClient() {
 
                         {/* Zone de Drag and Drop/Clic */}
                         <div
-                            className="w-full h-32 border-2 border-dashed border-purple-500/50 bg-gray-800/50 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                            className="w-full h-40 border-2 border-dashed border-white/20 bg-white/5 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-white/10 hover:border-white/30 transition-all group"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Plus className="w-6 h-6 text-purple-400 mb-1" />
-                            <p className="text-purple-400 text-sm font-medium">Ajoutez des images</p>
-                            <p className="text-gray-500 text-xs mt-1">Cliquez pour téléverser ou glisser-déposer</p>
+                            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-3 group-hover:bg-white/20 transition-colors">
+                                <Plus className="w-6 h-6 text-white" />
+                            </div>
+                            <p className="text-white text-sm font-medium">Cliquez ou glissez-déposez vos images</p>
+                            <p className="text-gray-500 text-xs mt-1">PNG, JPG, WebP jusqu'à 10MB</p>
                         </div>
 
                         {/* Carrousel des fichiers uploadés */}
@@ -258,16 +270,16 @@ export default function GenerateQuizClient() {
                                 <motion.button
                                     type="button"
                                     onClick={() => scrollSlider('left')}
-                                    className="absolute -left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-gray-900/80 rounded-full shadow-lg text-white hover:bg-gray-700 transition hidden lg:flex items-center justify-center border border-gray-700"
+                                    className="absolute -left-3 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black/80 rounded-full text-white hover:bg-white/10 transition hidden lg:flex items-center justify-center border border-white/20 backdrop-blur-sm"
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    <ChevronLeft className="w-5 h-5" />
+                                    <ChevronLeft className="w-4 h-4" />
                                 </motion.button>
 
                                 {/* Conteneur défilant */}
                                 <div
                                     ref={sliderRef}
-                                    className="flex overflow-x-auto space-x-4 pb-4 pt-2 px-2 scrollbar-hide"
+                                    className="flex overflow-x-auto space-x-3 pb-4 pt-2 scrollbar-hide"
                                     style={{ WebkitOverflowScrolling: 'touch' }}
                                 >
                                     {files.map((file, index) => (
@@ -283,10 +295,10 @@ export default function GenerateQuizClient() {
                                 <motion.button
                                     type="button"
                                     onClick={() => scrollSlider('right')}
-                                    className="absolute -right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-gray-900/80 rounded-full shadow-lg text-white hover:bg-gray-700 transition hidden lg:flex items-center justify-center border border-gray-700"
+                                    className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black/80 rounded-full text-white hover:bg-white/10 transition hidden lg:flex items-center justify-center border border-white/20 backdrop-blur-sm"
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    <ChevronRight className="w-5 h-5" />
+                                    <ChevronRight className="w-4 h-4" />
                                 </motion.button>
                             </div>
                         )}
@@ -303,9 +315,10 @@ export default function GenerateQuizClient() {
                         }
                     `}</style>
 
-                    {/* Disposition des options en 2 colonnes */}
-                    <div className="lg:grid lg:grid-cols-2 lg:gap-8">
-                        <div className="lg:col-span-1">
+                    {/* Configuration du quiz */}
+                    <section className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <h2 className="text-lg font-serif font-medium text-white mb-5">Configuration</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Difficulté */}
                             <OptionSelector
                                 title="Difficulté"
@@ -314,16 +327,6 @@ export default function GenerateQuizClient() {
                                 onSelect={(v) => setDifficulty(v as Difficulty)}
                             />
 
-                            {/* Max Questions */}
-                            <OptionSelector
-                                title="Max Questions"
-                                options={maxQuestionsOptions}
-                                selectedValue={maxQuestions}
-                                onSelect={(v) => setMaxQuestions(v as MaxQuestions)}
-                            />
-                        </div>
-
-                        <div className="lg:col-span-1">
                             {/* Format */}
                             <OptionSelector
                                 title="Format"
@@ -333,41 +336,46 @@ export default function GenerateQuizClient() {
                                 layout="wrap"
                             />
 
+                            {/* Max Questions */}
+                            <OptionSelector
+                                title="Nombre de questions"
+                                options={maxQuestionsOptions}
+                                selectedValue={maxQuestions}
+                                onSelect={(v) => setMaxQuestions(v as MaxQuestions)}
+                            />
+
                             {/* Langue */}
-                            <section className="mb-8">
-                                <h3 className="text-lg font-semibold text-white mb-4">Langue</h3>
+                            <div>
+                                <h3 className="text-sm font-medium text-gray-300 mb-3 ml-1">Langue</h3>
                                 <motion.div
                                     onClick={() => setIsLangSelectorOpen(true)}
-                                    className="flex justify-between items-center p-4 bg-gray-800 rounded-xl border border-gray-700 cursor-pointer hover:bg-gray-700 transition"
+                                    className="flex justify-between items-center px-4 py-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 hover:border-white/20 transition-all"
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    <p className="text-white">{language}</p>
-                                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                                    <p className="text-white text-sm">{language}</p>
+                                    <ChevronRight className="w-4 h-4 text-gray-400" />
                                 </motion.div>
-                            </section>
+                            </div>
                         </div>
+                    </section>
+
+                    {/* Bouton de génération */}
+                    <div className="mt-8">
+                        <button
+                            type="submit"
+                            disabled={!isFormValid()}
+                            onClick={handleGenerate}
+                            className="w-full py-4 px-6 bg-white text-black font-medium rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-gray-500 transition-all"
+                        >
+                            {!isFormValid() ? 'Complétez le formulaire' : 'Générer le quiz'}
+                        </button>
+                        {!isFormValid() && (
+                            <p className="text-xs text-gray-500 text-center mt-3">
+                                Ajoutez au moins une image et sélectionnez la langue
+                            </p>
+                        )}
                     </div>
                 </form>
-
-                {/* Pied de page */}
-                <footer className="p-6 border-t border-gray-700 bg-gray-800 lg:rounded-b-2xl">
-                    <button
-                        type="submit"
-                        disabled={!isFormValid()}
-                        onClick={handleGenerate}
-                        className={`w-full h-12 text-lg rounded-xl font-semibold shadow-lg transition-all duration-200 ${!isFormValid()
-                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-                                : 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-purple-500/30'
-                            }`}
-                    >
-                        Générer le Quiz
-                    </button>
-                    {!isFormValid() && (
-                        <p className="text-xs text-gray-400 text-center mt-2">
-                            Téléversez au moins une image et sélectionnez la langue
-                        </p>
-                    )}
-                </footer>
             </motion.div>
 
             {/* Modal du Sélecteur de Langue */}

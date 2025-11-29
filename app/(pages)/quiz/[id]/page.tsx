@@ -158,10 +158,10 @@ export default function QuizDetailsPage() {
     // État de chargement
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+            <div className="min-h-screen bg-black flex items-center justify-center text-white">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-                    <p className="text-gray-400">Chargement du quiz...</p>
+                    <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-400 text-sm">Chargement du quiz...</p>
                 </div>
             </div>
         );
@@ -170,11 +170,11 @@ export default function QuizDetailsPage() {
     // État d'erreur ou quiz non trouvé
     if (error || !quiz) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold mb-4">Quiz introuvable</h1>
-                    <p className="text-gray-400 mb-6">{error || 'Le quiz demandé n\'existe pas.'}</p>
-                    <Link href="/dashboard" className="text-purple-400 hover:underline">
+            <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
+                <div className="text-center max-w-md">
+                    <h1 className="text-2xl font-serif font-medium mb-3">Quiz introuvable</h1>
+                    <p className="text-gray-400 mb-8 text-sm">{error || 'Le quiz demandé n\'existe pas.'}</p>
+                    <Link href="/dashboard" className="inline-block px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors font-medium">
                         Retour au Dashboard
                     </Link>
                 </div>
@@ -201,96 +201,94 @@ export default function QuizDetailsPage() {
     const masteryPercentage = 0; // TODO: Calculer selon l'historique du joueur
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex justify-center p-4 lg:p-8">
+        <div className="min-h-screen bg-black text-white flex justify-center p-4 lg:p-8">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="w-full max-w-md lg:max-w-4xl bg-gray-900 flex flex-col"
+                className="w-full max-w-md lg:max-w-5xl flex flex-col"
             >
                 {/* Header avec bouton Fermer */}
-                <header className="flex justify-between items-start mb-6 pt-4">
-                    <h1 className="text-2xl lg:text-3xl font-bold leading-tight max-w-[85%]">
-                        {quiz.title}
-                    </h1>
+                <header className="flex justify-between items-start mb-8">
+                    <div>
+                        <h1 className="text-3xl lg:text-4xl font-serif font-medium leading-tight mb-2">
+                            {quiz.title}
+                        </h1>
+                        <p className="text-sm text-gray-500">ID: {quiz.quizId}</p>
+                    </div>
                     <button
                         onClick={() => router.back()}
-                        className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition"
+                        className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
                     >
-                        <X className="w-5 h-5 text-gray-400" />
+                        <X className="w-5 h-5" />
                     </button>
                 </header>
 
-                <div className="lg:grid lg:grid-cols-2 lg:gap-12">
-                    {/* Colonne Gauche (Desktop) */}
-                    <div>
-                        {/* ID du Quiz */}
-                        <div className="text-gray-500 text-sm mb-6">
-                            ID du Quiz : {quiz.quizId}
-                        </div>
-
+                <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                    {/* Colonne Gauche et Centrale */}
+                    <div className="lg:col-span-2 space-y-6">
                         {/* Métadonnées (Temps, Questions, Actions) */}
-                        <div className="flex items-center justify-between text-gray-400 text-sm mb-8">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-between pb-6 border-b border-white/10">
+                            <div className="flex items-center gap-6 text-sm">
+                                <div className="flex items-center gap-2 text-gray-400">
                                     <Clock className="w-4 h-4" />
                                     <span>{timeAgo}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-2 text-gray-400">
                                     <HelpCircle className="w-4 h-4" />
-                                    <span>{quiz.questions.length} Questions</span>
+                                    <span>{quiz.questions.length} questions</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                                 <button
                                     onClick={handleShare}
-                                    className="hover:text-white transition relative group"
+                                    className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white relative group"
                                     title="Copier le lien"
                                 >
-                                    <Share2 className="w-5 h-5" />
+                                    <Share2 className="w-4 h-4" />
                                     {showCopied && (
-                                        <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">
+                                        <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-black text-xs py-1.5 px-3 rounded-lg shadow-lg whitespace-nowrap">
                                             Copié !
                                         </span>
                                     )}
                                 </button>
                                 <button
                                     onClick={() => setIsDeleteModalOpen(true)}
-                                    className="hover:text-red-400 transition"
+                                    className="p-2 rounded-lg hover:bg-red-500/10 transition-colors text-gray-400 hover:text-red-400"
                                     title="Supprimer le quiz"
                                 >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
 
                         {/* Statistiques Rapides (Questions, Joué, Maitrise) */}
-                        <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-                            <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
-                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{quiz.questions.length}</span>
-                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Questions</span>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="flex flex-col items-center p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <span className="text-2xl lg:text-3xl font-serif font-medium text-white">{quiz.questions.length}</span>
+                                <span className="text-xs text-gray-400 uppercase tracking-wider mt-2">Questions</span>
                             </div>
-                            <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
-                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{playedCount}</span>
-                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Joué</span>
+                            <div className="flex flex-col items-center p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <span className="text-2xl lg:text-3xl font-serif font-medium text-white">{playedCount}</span>
+                                <span className="text-xs text-gray-400 uppercase tracking-wider mt-2">Joué</span>
                             </div>
-                            <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
-                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{masteryPercentage}%</span>
-                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Maitrise</span>
+                            <div className="flex flex-col items-center p-5 bg-white/5 rounded-2xl border border-white/10">
+                                <span className="text-2xl lg:text-3xl font-serif font-medium text-white">{masteryPercentage}%</span>
+                                <span className="text-xs text-gray-400 uppercase tracking-wider mt-2">Maîtrise</span>
                             </div>
                         </div>
 
                         {/* Section Onglets et Contenu (Questions/Flashcards/Notes) */}
-                        <div className="mb-8 lg:mb-0">
+                        <div>
                             {/* Onglets */}
-                            <div className="flex p-1 bg-gray-800/50 rounded-xl mb-6">
+                            <div className="flex gap-2 mb-6">
                                 {['Questions', 'Flashcards', 'Notes'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab.toLowerCase())}
-                                        className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${activeTab === tab.toLowerCase()
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20'
-                                            : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+                                        className={`px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${activeTab === tab.toLowerCase()
+                                            ? 'bg-white text-black'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/10'
                                             }`}
                                     >
                                         {tab}
@@ -299,20 +297,20 @@ export default function QuizDetailsPage() {
                             </div>
 
                             {/* Contenu des Onglets */}
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {activeTab === 'questions' && (
                                     <div className="space-y-3">
                                         {quiz.questions.map((q, index) => (
-                                            <div key={index} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors group">
+                                            <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-white/20 transition-colors group">
                                                 <div className="flex justify-between items-start mb-3">
-                                                    <h3 className="text-gray-200 font-medium leading-snug pr-4">
+                                                    <h3 className="text-white font-medium leading-snug pr-4 text-sm">
                                                         {q.question}
                                                     </h3>
                                                     <button className="text-gray-500 hover:text-white transition opacity-0 group-hover:opacity-100">
-                                                        <MoreVertical className="w-5 h-5" />
+                                                        <MoreVertical className="w-4 h-4" />
                                                     </button>
                                                 </div>
-                                                <div className="flex items-center text-xs font-medium text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md w-fit">
+                                                <div className="flex items-center text-xs font-medium text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg w-fit">
                                                     {q.type === 'multiple_choice' ? (
                                                         <ListChecks className="w-3.5 h-3.5 mr-1.5" />
                                                     ) : (
@@ -328,43 +326,43 @@ export default function QuizDetailsPage() {
                                     <div className="space-y-3">
                                         {quiz.flashcards.length > 0 ? (
                                             quiz.flashcards.map((card, index) => (
-                                                <div key={index} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors">
-                                                    <div className="text-gray-200 font-medium mb-3">{card.term}</div>
-                                                    <div className="h-px bg-gray-700/50 mb-3" />
-                                                    <div className="text-gray-400 text-sm mb-2">{card.definition}</div>
+                                                <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-5 hover:border-white/20 transition-colors">
+                                                    <div className="text-white font-medium mb-3 text-sm">{card.term}</div>
+                                                    <div className="h-px bg-white/10 mb-3" />
+                                                    <div className="text-gray-400 text-sm mb-2 leading-relaxed">{card.definition}</div>
                                                     {card.hint && (
-                                                        <div className="text-purple-400 text-xs italic mt-2">
+                                                        <div className="text-gray-500 text-xs italic mt-3">
                                                             💡 {card.hint}
                                                         </div>
                                                     )}
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="text-center text-gray-500 py-8">
+                                            <div className="text-center text-gray-500 py-12 bg-white/5 rounded-2xl border border-dashed border-white/10">
                                                 Aucune flashcard disponible
                                             </div>
                                         )}
                                     </div>
                                 )}
                                 {activeTab === 'notes' && (
-                                    <div className="bg-yellow-900/10 border border-yellow-700/20 rounded-xl p-6">
-                                        <h3 className="text-yellow-500 font-semibold mb-4 text-lg flex items-center gap-2">
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                        <h3 className="text-white font-serif font-medium mb-5 text-lg flex items-center gap-2">
                                             <FileText className="w-5 h-5" />
                                             Résumé du cours
                                         </h3>
                                         <div className="prose prose-invert prose-sm max-w-none 
-                                            prose-headings:text-yellow-400 prose-headings:font-semibold
+                                            prose-headings:text-white prose-headings:font-serif prose-headings:font-medium
                                             prose-h2:text-base prose-h2:mt-4 prose-h2:mb-3
                                             prose-h3:text-sm prose-h3:mt-3 prose-h3:mb-2
                                             prose-p:text-gray-300 prose-p:leading-relaxed prose-p:my-3
-                                            prose-strong:text-yellow-300 prose-strong:font-semibold
-                                            prose-em:text-gray-200 prose-em:italic
+                                            prose-strong:text-white prose-strong:font-medium
+                                            prose-em:text-gray-300 prose-em:italic
                                             prose-ul:my-3 prose-ul:text-gray-300 prose-ul:space-y-1
                                             prose-ol:my-3 prose-ol:text-gray-300 prose-ol:space-y-2
                                             prose-li:my-1
-                                            prose-blockquote:border-l-yellow-600 prose-blockquote:bg-yellow-900/20 
+                                            prose-blockquote:border-l-white/20 prose-blockquote:bg-white/5 
                                             prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-4
-                                            prose-hr:border-yellow-700/30 prose-hr:my-6">
+                                            prose-hr:border-white/10 prose-hr:my-6">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                 {quiz.notes || 'Aucun résumé disponible pour ce quiz.'}
                                             </ReactMarkdown>
@@ -378,26 +376,25 @@ export default function QuizDetailsPage() {
                     {/* Colonne Droite (Desktop) - Sticky */}
                     <div className="lg:sticky lg:top-8 lg:h-fit space-y-6">
                         {/* Carte Score de Maîtrise */}
-                        <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700/50">
+                        <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                             <div className="flex items-center gap-3 mb-4">
-                                <Award className="w-6 h-6 text-purple-500" />
-                                <h2 className="text-lg font-semibold">Score de maîtrise</h2>
+                                <Award className="w-5 h-5 text-white" />
+                                <h2 className="text-lg font-serif font-medium">Score de maîtrise</h2>
                             </div>
 
                             <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                                Votre score de maîtrise reflète votre niveau de connaissance d'un sujet.
-                                Améliorez-le en répondant correctement à davantage de questions et en révisant régulièrement.
+                                Votre score reflète votre niveau de connaissance. Améliorez-le en révisant régulièrement.
                             </p>
 
-                            {/* Barre de Progression Large */}
-                            <div className="relative pt-2">
-                                <div className="flex items-center justify-between mb-2">
-                                    <Award className="w-6 h-6 text-purple-400" />
-                                    <span className="text-purple-400 font-bold">{masteryPercentage}%</span>
+                            {/* Barre de Progression */}
+                            <div className="relative">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm text-gray-400">Progression</span>
+                                    <span className="text-white font-medium">{masteryPercentage}%</span>
                                 </div>
-                                <div className="w-full bg-gray-700 rounded-full h-3">
+                                <div className="w-full bg-white/10 rounded-full h-2">
                                     <motion.div
-                                        className="bg-purple-600 h-3 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.5)]"
+                                        className="bg-white h-2 rounded-full"
                                         initial={{ width: 0 }}
                                         animate={{ width: `${masteryPercentage}%` }}
                                         transition={{ duration: 1, ease: "easeOut" }}
@@ -409,7 +406,7 @@ export default function QuizDetailsPage() {
                         {/* Bouton d'action principal */}
                         <button
                             onClick={() => setIsModeSelectionOpen(true)}
-                            className="w-full py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-white hover:bg-gray-200 text-black font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                         >
                             <PlayCircle className="w-5 h-5" />
                             Commencer le Quiz
