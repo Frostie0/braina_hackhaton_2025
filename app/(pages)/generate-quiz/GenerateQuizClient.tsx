@@ -3,17 +3,21 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
-// Assurez-vous que les imports sont corrects
-// Si vous utilisez un environnement de compilation comme Next.js, les chemins en '@/' sont corrects.
 import { OptionSelector } from '@/components/ui/OptionSelector';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { FormError } from '@/components/ui/FormError';
 import { SubmitButton } from '@/components/ui/SubmitButton';
 import { FilePreviewItem } from '@/components/ui/FilePreviewItem';
+import { QuizGenerationModal } from '@/components/ui/QuizGenerationModal';
 import { useQuizStore, Difficulty, Format, MaxQuestions } from '@/lib/store/quizStore';
+import { extractTextFromMultipleImages, filterValidImages } from '@/lib/services/gemini.service';
+import { serverIp } from '@/lib/serverIp';
+import { getUserId } from '@/lib/storage/userStorage';
 
-// Options statiques pour les sélecteurs (inchangées)
+// Options pour les sélecteurs
 const difficultyOptions = [
     { label: 'Facile', value: 'easy' },
     { label: 'Moyen', value: 'medium' },
@@ -21,10 +25,9 @@ const difficultyOptions = [
 ];
 
 const formatOptions = [
-    { label: 'Tout', value: 'all' },
+    { label: 'Mixte', value: 'both' },
     { label: 'Choix multiple', value: 'multiple_choice' },
     { label: 'Vrai ou Faux', value: 'true_false' },
-    { label: 'Compléter', value: 'fill_in_blank' },
 ];
 
 const maxQuestionsOptions = [
@@ -38,61 +41,176 @@ const maxQuestionsOptions = [
  * Page de génération de quiz (Client Component)
  */
 export default function GenerateQuizClient() {
+    const router = useRouter();
     const {
         difficulty, setDifficulty,
         format, setFormat,
         maxQuestions, setMaxQuestions,
         language, files, addFile, removeFile,
-        error, isLoading, validateAndGenerate
     } = useQuizStore();
 
     const [isLangSelectorOpen, setIsLangSelectorOpen] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const sliderRef = useRef<HTMLDivElement>(null); // Ref pour le défilement
+    const sliderRef = useRef<HTMLDivElement>(null);
 
-    // Fonction de défilement du carrousel de fichiers
+    // États pour la modal de progression
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalStatus, setModalStatus] = useState<'idle' | 'extracting' | 'analyzing' | 'generating' | 'success' | 'error'>('idle');
+    const [modalProgress, setModalProgress] = useState(0);
+    const [modalError, setModalError] = useState<string>();
+
+    // Fonction de défilement du carrousel
     const scrollSlider = (direction: 'left' | 'right') => {
         if (sliderRef.current) {
-            const scrollAmount = direction === 'left' ? -200 : 200; // Défilement de 200px
+            const scrollAmount = direction === 'left' ? -200 : 200;
             sliderRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
     };
 
-
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
             Array.from(event.target.files).forEach(file => {
-                // Simuler l'ajout de fichier au store
                 addFile(file as unknown as File);
             });
-            // Réinitialiser le champ pour permettre la sélection du même fichier à nouveau
             event.target.value = '';
         }
     };
 
+    // Vérifier si le formulaire est valide
+    const isFormValid = (): boolean => {
+        return files.length > 0 && language !== 'Sélectionner une langue';
+    };
+
+    // Fonction principale de génération du quiz
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
-        await validateAndGenerate();
+        setError(null);
+
+        // Validation
+        if (files.length === 0) {
+            setError("Veuillez téléverser au moins une image pour générer le quiz.");
+            return;
+        }
+
+        if (language === 'Sélectionner une langue' || !language) {
+            setError("Veuillez sélectionner une langue pour le quiz.");
+            return;
+        }
+
+        // Récupérer l'userId
+        const userId = getUserId();
+        if (!userId) {
+            setError("Utilisateur non connecté. Veuillez vous reconnecter.");
+            return;
+        }
+
+        // Filtrer uniquement les images valides
+        const validImages = filterValidImages(files);
+        if (validImages.length === 0) {
+            setError("Aucune image valide trouvée. Veuillez téléverser des fichiers image (JPEG, PNG, WebP, GIF).");
+            return;
+        }
+
+        // Ouvrir la modal et démarrer le processus
+        setIsModalOpen(true);
+        setModalStatus('extracting');
+        setModalProgress(0);
+
+        try {
+            // ÉTAPE 1: Extraction du texte des images (0-40%)
+            const extractedTexts = await extractTextFromMultipleImages(
+                validImages,
+                (current, total) => {
+                    const progress = (current / total) * 40;
+                    setModalProgress(progress);
+                }
+            );
+
+            if (extractedTexts.length === 0) {
+                throw new Error("Aucun texte n'a pu être extrait des images.");
+            }
+
+            // ÉTAPE 2: Analyse (40-60%)
+            setModalStatus('analyzing');
+            setModalProgress(50);
+
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Petite pause pour l'UX
+
+            // ÉTAPE 3: Génération du quiz (60-100%)
+            setModalStatus('generating');
+            setModalProgress(60);
+
+            // Convertir maxQuestions en nombre
+            const maxQuestionsNumber = maxQuestions === 'auto' ? 10 : parseInt(maxQuestions);
+
+            // Préparer les données pour le backend
+            const quizData = {
+                data: extractedTexts,
+                difficulty,
+                maxQuestions: maxQuestionsNumber,
+                language,
+                format: format === 'all' ? 'both' : format,
+                userId,
+                isPublic: false, // Par défaut, quiz privé
+            };
+
+            // Envoyer au backend
+            const response = await axios.post(`${serverIp}/quiz/create`, quizData);
+
+            setModalProgress(100);
+
+            if (response.status === 201) {
+                // Succès !
+                setModalStatus('success');
+
+                // Attendre 2 secondes puis rediriger vers le dashboard
+                setTimeout(() => {
+                    setIsModalOpen(false);
+                    router.push('/dashboard');
+                }, 2000);
+            } else {
+                throw new Error(response.data?.error || 'Erreur lors de la création du quiz');
+            }
+
+        } catch (err: any) {
+            console.error('❌ Erreur de génération:', err);
+            setModalStatus('error');
+            setModalError(
+                err.response?.data?.error ||
+                err.message ||
+                'Une erreur est survenue lors de la génération du quiz.'
+            );
+        }
+    };
+
+    // Fermer la modal et réinitialiser
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setModalStatus('idle');
+        setModalProgress(0);
+        setModalError(undefined);
+
+        // Si c'est une erreur, ne pas rediriger
+        if (modalStatus === 'success') {
+            router.push('/dashboard');
+        }
     };
 
     return (
-        // Utilise un fond gris foncé pour simuler l'affichage sur le Dashboard
         <div className="min-h-screen bg-gray-900 flex justify-center py-8">
-
-            {/* Conteneur principal du formulaire - AUGMENTÉ POUR LE RESPONSIVE */}
+            {/* Conteneur principal du formulaire */}
             <motion.div
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 transition={{ type: 'tween', duration: 0.3 }}
-                // max-w-4xl pour encore plus de largeur sur grand écran
                 className="w-full max-w-lg lg:max-w-4xl bg-gray-900 lg:bg-gray-800 lg:rounded-2xl lg:shadow-xl flex flex-col h-full"
             >
-
-                {/* En-tête (Titre et bouton Fermer) */}
+                {/* En-tête */}
                 <header className="flex justify-between items-center p-6 border-b border-gray-700">
                     <h1 className="text-2xl font-bold text-white">Créer un Quiz</h1>
                     <motion.button
-                        onClick={() => console.log('Close Modal')}
+                        onClick={() => router.push('/dashboard')}
                         className="p-2 rounded-full text-gray-400 hover:bg-gray-700 transition"
                         whileTap={{ scale: 0.9 }}
                         type="button"
@@ -103,14 +221,13 @@ export default function GenerateQuizClient() {
 
                 {/* Corps du Formulaire */}
                 <form onSubmit={handleGenerate} className="flex-1 p-6 overflow-y-auto">
-
                     {/* Section d'erreur générale */}
                     <FormError error={error ?? undefined} className="mb-6" />
 
-                    {/* Section Téléverser (FULL WIDTH) */}
+                    {/* Section Téléverser */}
                     <section className="mb-8">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold text-white">Téléverser</h2>
+                            <h2 className="text-lg font-semibold text-white">Téléverser des images</h2>
                             <span className="text-sm text-gray-500">{files.length}/8</span>
                         </div>
 
@@ -120,7 +237,7 @@ export default function GenerateQuizClient() {
                             ref={fileInputRef}
                             onChange={handleFileChange}
                             multiple
-                            accept="image/*,.pdf,.txt" // Accepter plusieurs formats
+                            accept="image/*"
                             className="hidden"
                         />
 
@@ -130,14 +247,14 @@ export default function GenerateQuizClient() {
                             onClick={() => fileInputRef.current?.click()}
                         >
                             <Plus className="w-6 h-6 text-purple-400 mb-1" />
-                            <p className="text-purple-400 text-sm font-medium">Ajoutez un fichier (PDF, Image, Texte)</p>
+                            <p className="text-purple-400 text-sm font-medium">Ajoutez des images</p>
                             <p className="text-gray-500 text-xs mt-1">Cliquez pour téléverser ou glisser-déposer</p>
                         </div>
 
-                        {/* Carrousel des fichiers uploadés (Slides) */}
+                        {/* Carrousel des fichiers uploadés */}
                         {files.length > 0 && (
                             <div className="relative mt-6">
-                                {/* Bouton de défilement Gauche */}
+                                {/* Bouton gauche */}
                                 <motion.button
                                     type="button"
                                     onClick={() => scrollSlider('left')}
@@ -162,7 +279,7 @@ export default function GenerateQuizClient() {
                                     ))}
                                 </div>
 
-                                {/* Bouton de défilement Droit */}
+                                {/* Bouton droit */}
                                 <motion.button
                                     type="button"
                                     onClick={() => scrollSlider('right')}
@@ -173,25 +290,23 @@ export default function GenerateQuizClient() {
                                 </motion.button>
                             </div>
                         )}
-
                     </section>
 
-                    {/* Style pour cacher la scrollbar sur les éléments (besoin de CSS custom ou utilitaire) */}
+                    {/* Style scrollbar-hide */}
                     <style jsx global>{`
                         .scrollbar-hide::-webkit-scrollbar {
                             display: none;
                         }
                         .scrollbar-hide {
-                            -ms-overflow-style: none; /* IE and Edge */
-                            scrollbar-width: none;  /* Firefox */
+                            -ms-overflow-style: none;
+                            scrollbar-width: none;
                         }
                     `}</style>
 
-
-                    {/* Disposition des options en 2 colonnes sur grand écran */}
+                    {/* Disposition des options en 2 colonnes */}
                     <div className="lg:grid lg:grid-cols-2 lg:gap-8">
                         <div className="lg:col-span-1">
-                            {/* Sélecteur de Difficulté */}
+                            {/* Difficulté */}
                             <OptionSelector
                                 title="Difficulté"
                                 options={difficultyOptions}
@@ -199,7 +314,7 @@ export default function GenerateQuizClient() {
                                 onSelect={(v) => setDifficulty(v as Difficulty)}
                             />
 
-                            {/* Sélecteur Max Questions (Déplacé pour équilibrer la colonne) */}
+                            {/* Max Questions */}
                             <OptionSelector
                                 title="Max Questions"
                                 options={maxQuestionsOptions}
@@ -209,8 +324,7 @@ export default function GenerateQuizClient() {
                         </div>
 
                         <div className="lg:col-span-1">
-
-                            {/* Sélecteur de Format */}
+                            {/* Format */}
                             <OptionSelector
                                 title="Format"
                                 options={formatOptions}
@@ -219,7 +333,7 @@ export default function GenerateQuizClient() {
                                 layout="wrap"
                             />
 
-                            {/* Sélecteur de Langue (Champ de style Liste) */}
+                            {/* Langue */}
                             <section className="mb-8">
                                 <h3 className="text-lg font-semibold text-white mb-4">Langue</h3>
                                 <motion.div
@@ -235,21 +349,38 @@ export default function GenerateQuizClient() {
                     </div>
                 </form>
 
-                {/* Pied de page (Bouton Générer) */}
+                {/* Pied de page */}
                 <footer className="p-6 border-t border-gray-700 bg-gray-800 lg:rounded-b-2xl">
-                    <SubmitButton
-                        isLoading={isLoading}
-                        loadingText="Génération en cours..."
-                        className="w-full h-12 text-lg"
+                    <button
+                        type="submit"
+                        disabled={!isFormValid()}
+                        onClick={handleGenerate}
+                        className={`w-full h-12 text-lg rounded-xl font-semibold shadow-lg transition-all duration-200 ${!isFormValid()
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                                : 'bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-purple-500/30'
+                            }`}
                     >
                         Générer le Quiz
-                    </SubmitButton>
+                    </button>
+                    {!isFormValid() && (
+                        <p className="text-xs text-gray-400 text-center mt-2">
+                            Téléversez au moins une image et sélectionnez la langue
+                        </p>
+                    )}
                 </footer>
-
             </motion.div>
 
             {/* Modal du Sélecteur de Langue */}
             <LanguageSelector isOpen={isLangSelectorOpen} onClose={() => setIsLangSelectorOpen(false)} />
+
+            {/* Modal de Génération du Quiz */}
+            <QuizGenerationModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                status={modalStatus}
+                progress={modalProgress}
+                error={modalError}
+            />
         </div>
     );
-};
+}

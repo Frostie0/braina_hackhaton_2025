@@ -8,6 +8,9 @@ import { FormInput } from '../../../components/ui/FormInput';
 import { PasswordInput } from '../../../components/ui/PasswordInput';
 import { SubmitButton } from '../../../components/ui/SubmitButton';
 import { FormError } from '../../../components/ui/FormError';
+import axios from 'axios';
+import { serverIp } from '@/lib/serverIp';
+import { saveUserData, saveAuthTokens } from '@/lib/storage/userStorage';
 
 /**
  * Page de connexion (Client Component)
@@ -65,15 +68,32 @@ export default function LoginClient() {
         // Envoyer la requête au backend via axios
         setIsLoading(true);
         try {
-            const response = await axiosInstance.post('/v1/user/login', {
+            const response = await axios.post(`${serverIp}/user/login`, {
                 email: email.trim(),
                 password: password,
             });
 
-            // Succès - Les tokens sont automatiquement sauvegardés par l'intercepteur axios
+            // Succès - Sauvegarder les tokens et les données utilisateur
             console.log('✅ Connexion réussie:', response.data);
 
             if (response.status === 200) {
+                const { user, access_token, refresh_token } = response.data;
+
+                // Sauvegarder les tokens
+                if (access_token && refresh_token) {
+                    saveAuthTokens({ access_token, refresh_token });
+                }
+
+                // Sauvegarder les informations utilisateur
+                if (user) {
+                    saveUserData({
+                        userId: user.userId,
+                        name: user.name,
+                        email: user.email,
+                    });
+                }
+
+                // Naviguer vers le dashboard
                 router.push('/dashboard');
             }
 
@@ -97,6 +117,8 @@ export default function LoginClient() {
                     });
                 } else if (status === 500) {
                     setErrors({ general: 'Erreur serveur. Veuillez réessayer plus tard.' });
+                } else if (status == 404) {
+                    setErrors({ general: 'Utilisateur non trouvé' });
                 } else {
                     setErrors({ general: errorData.message || 'Une erreur est survenue' });
                 }
