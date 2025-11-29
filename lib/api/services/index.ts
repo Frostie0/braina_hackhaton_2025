@@ -3,8 +3,11 @@
  * Permet d'importer facilement tous les services depuis un seul endroit
  */
 
-export { authService } from './auth.service';
-export { quizService } from './quiz.service';
+import authService from './auth.service';
+import quizService from './quiz.service';
+
+// Re-export pour utilisation directe
+export { authService, quizService };
 
 // Export d'un objet contenant tous les services
 export const apiServices = {
