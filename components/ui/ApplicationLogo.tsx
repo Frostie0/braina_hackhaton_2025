@@ -1,5 +1,5 @@
 import React from 'react';
-import { Zap } from 'lucide-react';
+
 
 interface ApplicationLogoProps {
     className?: string;
@@ -11,8 +11,11 @@ const ApplicationLogo: React.FC<ApplicationLogoProps> = ({ className = "", size 
     return (
         <div className={`flex items-center ${className}`}>
             <div className="relative flex items-center justify-center">
-                <Zap size={size} className="text-purple-500 fill-purple-500/20" strokeWidth={2.5} />
-                <div className="absolute inset-0 bg-purple-500/20 blur-lg rounded-full" />
+                <img
+                    src="/assets/img/logo_white.png"
+                    alt="Braina Logo"
+                    style={{ width: size, height: size, objectFit: 'contain' }}
+                />
             </div>
             {withText && (
                 <span className="ml-2 font-bold text-xl tracking-tight text-white font-serif">

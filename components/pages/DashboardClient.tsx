@@ -2,8 +2,9 @@
 
 // L'IMPORTATION DE useEffect EST CRUCIALE POUR RÉGLER L'ERREUR SSR
 import React, { useState, useEffect } from 'react';
-import { Zap, Mic, BookOpen, Menu, Globe, ScrollText, Plus } from 'lucide-react';
+import { Zap, Mic, BookOpen, Menu, Globe, ScrollText, Plus, TrendingUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import ApplicationLogo from '@/components/ui/ApplicationLogo';
 
 import { Sidebar } from '../layout/Sidebar';
 import { RightPanel, RightPanelMobile } from '../layout/RightPanel';
@@ -219,8 +220,8 @@ export default function DashboardClient() {
 
                 {/* Topbar Mobile (Menu Hamburger & Logo) */}
                 <header className="flex lg:hidden items-center justify-between p-4 bg-black border-b border-white/10 sticky top-0 z-30">
-                    <div className="flex items-center text-xl font-serif font-medium text-white">
-                        BRAINA
+                    <div className="flex items-center">
+                        <ApplicationLogo size={24} />
                     </div>
                     <button
                         onClick={() => setIsSidebarOpen(true)}

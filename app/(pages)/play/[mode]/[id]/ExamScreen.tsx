@@ -206,63 +206,76 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
             <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="w-full max-w-[210mm] bg-white shadow-2xl mt-16 mb-12 min-h-[297mm] relative"
+                className="w-full max-w-[210mm] bg-white shadow-2xl mt-16 mb-12 min-h-[297mm] relative text-black"
                 style={{
                     padding: '20mm',
+                    fontFamily: '"Times New Roman", Times, serif'
                 }}
             >
                 {/* Official Header */}
-                <div className="border-b-2 border-black pb-6 mb-6 text-center">
-                    <h1 className="font-bold text-sm sm:text-base uppercase leading-tight mb-2">
-                        Ministère de l'Éducation Nationale et de la Formation Professionnelle (MENFP)
+                <div className="border-b-2 border-black pb-4 mb-6 text-center">
+                    <h1 className="font-bold text-base uppercase leading-tight mb-1">
+                        MINISTÈRE DE L'ÉDUCATION NATIONALE ET DE LA FORMATION PROFESSIONNELLE (MENFP)
                     </h1>
-                    <h2 className="font-bold text-xs sm:text-sm uppercase mb-1">
-                        Filière d'Enseignement Général
+                    <h2 className="font-bold text-sm uppercase mb-1">
+                        FILIERE D'ENSEIGNEMENT GÉNÉRAL
                     </h2>
-                    <h2 className="font-bold text-sm sm:text-base uppercase mb-4">
-                        Examens de Fin d'Études Secondaires
+                    <h2 className="font-bold text-sm uppercase mb-2">
+                        EXAMENS DE FIN D'ÉTUDES SECONDAIRES
                     </h2>
-
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-8 font-bold text-sm sm:text-base mb-4">
-                        <span className="uppercase">{quiz.title}</span>
-                        <span className="hidden sm:inline">•</span>
-                        <span>SÉRIES : (SMP-SVT)</span>
+                    <h1 className="font-bold text-xl uppercase mb-2">
+                        {quiz.subject || quiz.title}
+                    </h1>
+                    <div className="font-bold text-sm uppercase mb-2">
+                        SÉRIES : (SMP-SVT)
                     </div>
-
-                    <div className="inline-block border border-black px-4 py-1 font-bold text-sm uppercase">
-                        Texte Modèle
+                    <div className="font-bold text-sm uppercase">
+                        TEXTE MODÈLE
                     </div>
                 </div>
 
                 {/* Consignes */}
-                <div className="mb-8 text-sm leading-relaxed">
+                <div className="mb-6 text-sm leading-relaxed">
                     <p className="font-bold italic mb-1">Consignes :</p>
-                    <ul className="list-decimal list-inside space-y-0.5 italic text-gray-800">
+                    <ol className="list-decimal list-inside space-y-0.5 italic text-black font-medium">
                         <li>L'usage de la calculatrice programmable est formellement interdit.</li>
-                        <li>Tout gadget électronique est interdit dans la salle d'examen.</li>
-                        <li>Le silence est obligatoire.</li>
+                        <li>Tout gadget électronique (Tél., tablette, iPad, montre intelligente) est formellement interdit dans la salle d'examen.</li>
+                        <li>Le silence est obligatoire dans la salle, il crée de meilleures conditions de travail.</li>
                         <li>Les deux parties de l'épreuve sont obligatoires.</li>
-                    </ul>
-                    <div className="text-right font-bold mt-2">
+                    </ol>
+                    <div className="text-right font-bold mt-4">
                         Durée de l'épreuve : 3 heures
                     </div>
                 </div>
 
-                <div className="w-full h-px bg-black mb-8"></div>
+                <div className="w-full h-0.5 bg-black mb-8"></div>
 
                 {/* Exam Content - Two Columns Layout for larger screens */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
 
                     {/* Left Column - Part 1 */}
                     <div>
-                        <h3 className="font-bold underline mb-4 uppercase text-sm">
-                            A-PREMIÈRE PARTIE : Connaissances Générales (60%)
+                        <h3 className="font-bold underline mb-1 uppercase text-sm">
+                            A-PREMIÈRE PARTIE : {quiz.subject?.includes('Histoire') ? 'Histoire Nationale' : 'Connaissances Générales'} (60%)
                         </h3>
-                        <p className="text-sm italic mb-6">
-                            Les candidats répondent à toutes les questions suivantes.
+                        <p className="text-sm font-bold mb-4">
+                            les candidats répondent aux questions des deux textes
                         </p>
 
-                        <div className="space-y-8">
+                        {/* Textes historiques placeholder if subject is history */}
+                        {quiz.subject?.includes('Histoire') && (
+                            <div className="mb-4">
+                                <h4 className="font-bold text-sm mb-2">Textes historiques</h4>
+                                <div className="text-xs text-justify mb-4">
+                                    <p className="font-bold mb-1">Texte 1</p>
+                                    <p className="italic">
+                                        (Texte généré dynamiquement ou espace réservé pour le texte source...)
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-6">
                             {quiz.questions.slice(0, Math.ceil(totalQuestions / 2)).map((q, idx) => (
                                 <div key={q.id} className="break-inside-avoid">
                                     <div className="flex gap-2 mb-2">
@@ -271,11 +284,11 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                             {q.question}
                                         </p>
                                     </div>
-                                    <div className="pl-6 space-y-2">
+                                    <div className="pl-6 space-y-1">
                                         {q.options.map((option, optIdx) => (
                                             <label key={optIdx} className="flex items-start gap-2 cursor-pointer group">
-                                                <div className={`mt-1 w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black border-black' : 'group-hover:border-gray-600'}`}>
-                                                    {answers[q.id] === option && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                <div className={`mt-0.5 w-3 h-3 border border-black rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black' : 'group-hover:bg-gray-200'}`}>
+                                                    {answers[q.id] === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                                                 </div>
                                                 <input
                                                     type="radio"
@@ -296,18 +309,12 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                     {/* Right Column - Part 2 */}
                     <div>
                         <h3 className="font-bold underline mb-4 uppercase text-sm">
-                            DEUXIÈME PARTIE (40%) : Analyse et Réflexion
+                            DEUXIEME PARTIE (40%)
+                            <br />
+                            {quiz.subject?.includes('Histoire') ? 'Histoire Universelle et Géographie Générale' : 'Analyse et Réflexion'}
                         </h3>
 
-                        {/* Mock Text Document if needed, or just continue questions */}
-                        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 text-xs text-justify leading-relaxed font-serif">
-                            <p className="font-bold mb-2">Document 1</p>
-                            <p>
-                                "L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le monde." Cette citation célèbre nous rappelle l'importance cruciale de l'apprentissage dans le développement des sociétés modernes. Face aux défis du XXIe siècle, l'adaptation de nos systèmes éducatifs devient une priorité absolue...
-                            </p>
-                        </div>
-
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             {quiz.questions.slice(Math.ceil(totalQuestions / 2)).map((q, idx) => (
                                 <div key={q.id} className="break-inside-avoid">
                                     <div className="flex gap-2 mb-2">
@@ -316,11 +323,11 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                             {q.question}
                                         </p>
                                     </div>
-                                    <div className="pl-6 space-y-2">
+                                    <div className="pl-6 space-y-1">
                                         {q.options.map((option, optIdx) => (
                                             <label key={optIdx} className="flex items-start gap-2 cursor-pointer group">
-                                                <div className={`mt-1 w-4 h-4 border border-gray-400 rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black border-black' : 'group-hover:border-gray-600'}`}>
-                                                    {answers[q.id] === option && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                <div className={`mt-0.5 w-3 h-3 border border-black rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black' : 'group-hover:bg-gray-200'}`}>
+                                                    {answers[q.id] === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                                                 </div>
                                                 <input
                                                     type="radio"

@@ -1,13 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
-import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut } from 'lucide-react';
+import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { serverIp } from '@/lib/serverIp';
+import { getUserId } from '@/lib/storage/userStorage';
+import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut, TrendingUp } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
 
 // Interfaces
+interface User {
+    _id: string;
+    userId: string;
+    name: string;
+    email: string;
+    profile?: string;
+}
+
 interface NavItem {
     icon: React.ElementType;
     label: string;
@@ -16,17 +26,16 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
     { icon: Home, label: 'Accueil' },
     { icon: Zap, label: 'Générer' },
-    { icon: MessageSquare, label: 'Chat' },
-    { icon: Award, label: 'Classement' },
+    { icon: TrendingUp, label: 'Analytics' },
 ];
 
 const profileMenuItems: NavItem[] = [
     { icon: Settings, label: 'Paramètres' },
-    { icon: User, label: 'Personnalisation' },
-    { icon: Upload, label: 'Mes Uploads' },
-    { icon: CreditCard, label: 'Abonnement' },
+    // { icon: User, label: 'Personnalisation' },
+    // { icon: Upload, label: 'Mes Uploads' },
+    // { icon: CreditCard, label: 'Abonnement' },
     { icon: Globe, label: 'Langue' },
-    { icon: LifeBuoy, label: 'Support' },
+    // { icon: LifeBuoy, label: 'Support' },
     { icon: LogOut, label: 'Déconnexion' },
 ];
 
@@ -74,29 +83,10 @@ const ProfileDropdownMenu: React.FC = () => (
     </motion.div>
 );
 
-// Composant UserProfileFooter
-const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean }> = ({ onClick, isMenuOpen }) => (
-    <div
-        className="flex items-center p-3 mx-2 mb-4 rounded-xl hover:bg-white/5 cursor-pointer transition-colors duration-200 group"
-        onClick={onClick}
-    >
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
-            <span className="text-xs font-bold text-white">CD</span>
-        </div>
-        <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate group-hover:text-purple-200 transition-colors">Christan Denison</p>
-            <p className="text-xs text-gray-500 truncate">Compte & paramètres</p>
-        </div>
-        <motion.div animate={{ rotate: isMenuOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
-        </motion.div>
-    </div>
-);
-
 // Header de la Sidebar
 const SidebarHeader: React.FC<{ onToggle?: () => void }> = ({ onToggle }) => (
     <div className="flex items-center justify-between px-6 py-6">
-        <ApplicationLogo size={24} />
+        <ApplicationLogo size={52} />
         <button
             onClick={onToggle}
             className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
@@ -118,14 +108,83 @@ interface SidebarProps {
     isDesktop: boolean;
 }
 
+// Composant UserProfileFooter
+const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean; user: User | null; isLoading: boolean }> = ({ onClick, isMenuOpen, user, isLoading }) => {
+    // Get initials
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(part => part[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    return (
+        <div
+            className="flex items-center p-3 mx-2 mb-4 rounded-xl hover:bg-white/5 cursor-pointer transition-colors duration-200 group"
+            onClick={onClick}
+        >
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
+                <span className="text-xs font-bold text-white">
+                    {isLoading ? '...' : user ? getInitials(user.name) : 'G'}
+                </span>
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate group-hover:text-purple-200 transition-colors">
+                    {isLoading ? (
+                        'Chargement...'
+                    ) : user ? (
+                        user.name
+                    ) : (
+                        'Invité'
+                    )}
+                </p>
+                <p className="text-xs text-gray-500 truncate">Compte & paramètres</p>
+            </div>
+            <motion.div animate={{ rotate: isMenuOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
+            </motion.div>
+        </div>
+    );
+};
+
+// ... (SidebarHeader and variants code)
+
 export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen, isDesktop }) => {
 
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoadingUser, setIsLoadingUser] = useState(true);
     const router = useRouter();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const userId = getUserId();
+                if (userId) {
+                    const response = await axios.get(`${serverIp}/user/getUser/${userId}`);
+                    if (response.status === 200) {
+                        setUser(response.data.user);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            } finally {
+                setIsLoadingUser(false);
+            }
+        };
+
+        fetchUserData();
+    }, []);
 
     const toggleProfileMenu = () => {
         setIsProfileMenuOpen(prev => !prev);
     };
+
+    // ... (rest of the component)
+
 
     const sidebarContent = (
         <div className="flex flex-col h-full bg-black border-r border-white/10">
@@ -140,7 +199,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                             key={item.label}
                             icon={item.icon}
                             label={item.label}
-                            isActive={item.label === 'Accueil'}
+                            isActive={item.label === 'Accueil' && pathname === '/dashboard' || item.label === 'Analytics' && pathname.includes('/analytics')}
+                            onClick={() => {
+                                if (item.label === 'Accueil') router.push('/dashboard');
+                                else if (item.label === 'Générer') router.push('/generate-quiz');
+                                else if (item.label === 'Analytics') router.push('/analytics');
+                                if (!isDesktop) setIsSidebarOpen(false);
+                            }}
                         />
                     ))}
                     {/* Lien pour rejoindre une partie multijoueur */}
@@ -153,24 +218,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                         }}
                     />
                 </nav>
-
-                {/* Section Dossiers (Style épuré) */}
-                <div className="mt-10 px-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Dossiers</span>
-                        <Plus className="w-3.5 h-3.5 text-gray-500 hover:text-white cursor-pointer transition-colors" />
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex items-center text-gray-400 hover:text-white cursor-pointer transition-colors py-1.5 group">
-                            <Folder className="w-4 h-4 mr-3 text-gray-600 group-hover:text-gray-400" />
-                            <span className="text-sm">Récents</span>
-                        </div>
-                        <div className="flex items-center text-gray-400 hover:text-white cursor-pointer transition-colors py-1.5 group">
-                            <Folder className="w-4 h-4 mr-3 text-gray-600 group-hover:text-gray-400" />
-                            <span className="text-sm">Mathématiques</span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Footer Profil */}
@@ -181,6 +228,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                 <UserProfileFooter
                     onClick={toggleProfileMenu}
                     isMenuOpen={isProfileMenuOpen}
+                    user={user}
+                    isLoading={isLoadingUser}
                 />
             </div>
         </div>
