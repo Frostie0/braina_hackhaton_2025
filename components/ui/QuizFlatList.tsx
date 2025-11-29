@@ -123,7 +123,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                 {canScrollLeft && (
                     <button
                         onClick={() => scroll('left')}
-                        className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
+                        className="lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
                         aria-label="Défiler vers la gauche"
                     >
                         <ChevronLeft className="w-6 h-6" />
@@ -134,7 +134,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                 {canScrollRight && (
                     <button
                         onClick={() => scroll('right')}
-                        className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
+                        className="lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
                         aria-label="Défiler vers la droite"
                     >
                         <ChevronRight className="w-6 h-6" />

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, Menu, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion'; // Import AnimatePresence
 
@@ -30,8 +31,8 @@ const profileMenuItems: NavItem[] = [
 // Sous-composant pour un élément de la barre latérale
 const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?: boolean }> = ({ icon: Icon, label, isActive }) => (
     <div className={`flex items-center px-6 py-3 cursor-pointer transition-all duration-200 border-l-4 ${isActive
-            ? 'bg-purple-600/30 text-white border-purple-500 font-semibold'
-            : 'text-gray-400 border-transparent hover:bg-gray-700/50 hover:text-white'
+        ? 'bg-purple-600/30 text-white border-purple-500 font-semibold'
+        : 'text-gray-400 border-transparent hover:bg-gray-700/50 hover:text-white'
         }`}>
         <Icon className="w-5 h-5 mr-4" />
         <span className="text-sm">{label}</span>
@@ -61,7 +62,7 @@ const ProfileDropdownMenu: React.FC = () => (
         exit="hidden"
         variants={dropdownVariants}
         // Pour s'assurer que le contenu est masqué lorsqu'il n'est pas affiché
-        style={{ overflow: 'hidden' }} 
+        style={{ overflow: 'hidden' }}
     >
         {profileMenuItems.map((item) => (
             <ProfileMenuItem key={item.label} icon={item.icon} label={item.label} />
@@ -72,7 +73,7 @@ const ProfileDropdownMenu: React.FC = () => (
 
 // Composant UserProfileFooter, maintenant avec gestion du clic et rotation de l'icône
 const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean }> = ({ onClick, isMenuOpen }) => (
-    <div 
+    <div
         className="flex items-center p-4 border-t border-gray-700 bg-gray-700/30 hover:bg-gray-700 cursor-pointer transition-colors relative"
         onClick={onClick}
     >
@@ -90,12 +91,19 @@ const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean }> 
     </div>
 );
 
-// CORRECTION DANS LE HEADER
+// Header de la Sidebar avec le logo officiel
 const SidebarHeader: React.FC<{ onToggle?: () => void }> = ({ onToggle }) => (
     <div className="flex items-center justify-between p-4 text-xl font-extrabold border-b border-gray-700 text-purple-400">
-        <div className="flex items-center">
-            <Globe className="w-6 h-6 mr-2 text-purple-500" /> {/* Logo de l'app (icône) */}
-            <span>BRAINA</span>
+        <div className="flex items-center gap-2">
+            {/* Logo officiel de l'application */}
+            <Image
+                src="/assets/img/logo_white.png"
+                alt="Braina Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+            />
+            <span className='text-white'>BRAINA</span>
         </div>
         {/* Le bouton X est visible uniquement sur mobile (lg:hidden) */}
         <button onClick={onToggle} className="p-1 rounded-full text-gray-400 hover:bg-gray-700 lg:hidden">
@@ -117,7 +125,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen, isDesktop }) => {
-    
+
     // NOUVEL ÉTAT: Gestion de l'ouverture du menu de profil
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
@@ -128,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
     // Le contenu qui sera dans l'aside (commun aux deux modes: desktop et mobile)
     const sidebarContent = (
         <div className="flex flex-col h-full relative"> {/* Ajout de relative pour positionner le menu déroulant */}
-            
+
             <div className="flex flex-col flex-1 overflow-y-auto">
                 {/* Header pour mobile (avec bouton de fermeture) */}
                 <SidebarHeader
@@ -166,20 +174,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                     </div>
                 </nav>
             </div>
-            
+
             {/* Menu Déroulant du Profil (affiché au-dessus du footer) */}
             <AnimatePresence>
                 {isProfileMenuOpen && <ProfileDropdownMenu />}
             </AnimatePresence>
 
             {/* Footer du profil utilisateur */}
-            <UserProfileFooter 
-                onClick={toggleProfileMenu} 
+            <UserProfileFooter
+                onClick={toggleProfileMenu}
                 isMenuOpen={isProfileMenuOpen}
             />
         </div>
     );
-    
+
     // Sur DESKTOP: utilisez un aside normal sans animation
     if (isDesktop) {
         return (
