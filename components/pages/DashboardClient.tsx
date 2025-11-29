@@ -2,7 +2,7 @@
 
 // L'IMPORTATION DE useEffect EST CRUCIALE POUR RÉGLER L'ERREUR SSR
 import React, { useState, useEffect } from 'react';
-import { Zap, Mic, BookOpen, Menu, Globe } from 'lucide-react';
+import { Zap, Mic, BookOpen, Menu, Globe, ScrollText } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { Sidebar } from '../layout/Sidebar';
@@ -261,6 +261,13 @@ export default function DashboardClient() {
                                     icon={Zap}
                                     title="Générer un quiz"
                                     description="Transformez n'importe quel contenu en flashcards, quiz et podcasts."
+                                />
+                            </Link>
+                            <Link href='/generate-exam'>
+                                <QuickStartCard
+                                    icon={ScrollText}
+                                    title="Examen blanc personnalisé"
+                                    description="Créez des examens types État à partir de vos notes, organisés par thématiques."
                                 />
                             </Link>
                             <QuickStartCard

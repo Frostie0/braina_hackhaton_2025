@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { X, Share2, Trash2, Clock, HelpCircle, PlayCircle, Award, MoreVertical, ListChecks, CheckCircle2, FileText } from 'lucide-react';
-import { quizData } from '@/lib/data/quiz';
-import { getQuizSummary } from '@/lib/data/quiz-summary';
+import { X, Share2, Trash2, Clock, HelpCircle, PlayCircle, Award, MoreVertical, ListChecks, CheckCircle2, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import axios from 'axios';
+import { serverIp } from '@/lib/serverIp';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ModeSelectionModal from '@/components/ui/ModeSelectionModal';
 import GamePreferencesModal, { GamePreferences } from '@/components/ui/GamePreferencesModal';
@@ -15,10 +15,41 @@ import WaitingRoom from '@/components/ui/WaitingRoom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+// Types pour les données du backend
+interface BackendQuiz {
+    _id: string;
+    quizId: string;
+    title: string;
+    notes: string;
+    tags: string[];
+    questions: BackendQuestion[];
+    flashcards: BackendFlashcard[];
+    players: any[];
+    isPublic: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface BackendQuestion {
+    type: 'true_false' | 'multiple_choice';
+    question: string;
+    correctAnswer: boolean | string;
+    options?: string[];
+    explanation: string;
+}
+
+interface BackendFlashcard {
+    term: string;
+    definition: string;
+    hint?: string;
+    memoryTip?: string;
+}
+
 export default function QuizDetailsPage() {
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
+
     const [activeTab, setActiveTab] = useState('questions');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isModeSelectionOpen, setIsModeSelectionOpen] = useState(false);
@@ -28,11 +59,40 @@ export default function QuizDetailsPage() {
     const [selectedMode, setSelectedMode] = useState<string>('');
     const [roomCode, setRoomCode] = useState('');
     const [multiplayerConfig, setMultiplayerConfig] = useState<any>(null);
-
     const [showCopied, setShowCopied] = useState(false);
 
-    // Trouver le quiz correspondant (dans une vraie app, ce serait un fetch)
-    const quiz = quizData.find((q) => q.id === id);
+    // États pour les données du backend
+    const [quiz, setQuiz] = useState<BackendQuiz | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Charger les données du quiz depuis le backend
+    useEffect(() => {
+        const fetchQuizData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                const response = await axios.get(`${serverIp}/quiz/getQuiz/${id}`);
+
+                if (response.status === 200) {
+                    setQuiz(response.data.quiz);
+                    console.log('✅ Quiz chargé:', response.data.quiz);
+                } else {
+                    throw new Error('Quiz non trouvé');
+                }
+            } catch (err: any) {
+                console.error('❌ Erreur lors du chargement du quiz:', err);
+                setError(err.response?.data?.error || err.message || 'Erreur lors du chargement du quiz');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (id) {
+            fetchQuizData();
+        }
+    }, [id]);
 
     const handleShare = async () => {
         try {
@@ -44,10 +104,15 @@ export default function QuizDetailsPage() {
         }
     };
 
-    const handleDelete = () => {
-        // Ici, on appellerait une API pour supprimer le quiz
-        // Pour l'instant, on redirige juste vers le dashboard
-        router.push('/dashboard');
+    const handleDelete = async () => {
+        try {
+            await axios.delete(`${serverIp}/quiz/delete/${id}`);
+            router.push('/dashboard');
+        } catch (err) {
+            console.error('Erreur lors de la suppression:', err);
+            // Rediriger quand même vers le dashboard
+            router.push('/dashboard');
+        }
     };
 
     const handleSelectMode = (mode: string) => {
@@ -55,16 +120,13 @@ export default function QuizDetailsPage() {
         setIsModeSelectionOpen(false);
 
         if (mode === 'multiplayer') {
-            // Pour le mode multijoueur, ouvrir le modal de configuration multijoueur
             setIsMultiplayerConfigOpen(true);
         } else {
-            // Pour les autres modes, ouvrir le modal de préférences standard
             setIsPreferencesOpen(true);
         }
     };
 
     const handleCreateMultiplayerRoom = (config: any) => {
-        // Générer un code de salle aléatoire
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         setRoomCode(code);
         setMultiplayerConfig(config);
@@ -73,7 +135,6 @@ export default function QuizDetailsPage() {
     };
 
     const handleStartMultiplayerGame = () => {
-        // Démarrer le jeu multijoueur
         const queryParams = new URLSearchParams({
             questions: multiplayerConfig.questionsPerSession === 'all' ? '10' : multiplayerConfig.questionsPerSession.toString(),
             shuffle: 'true',
@@ -85,7 +146,6 @@ export default function QuizDetailsPage() {
     };
 
     const handleStartGame = (preferences: GamePreferences) => {
-        // Navigation avec les préférences
         const queryParams = new URLSearchParams({
             questions: preferences.questionsPerSession.toString(),
             shuffle: preferences.shuffleQuestions.toString()
@@ -95,11 +155,25 @@ export default function QuizDetailsPage() {
         setIsPreferencesOpen(false);
     };
 
-    if (!quiz) {
+    // État de chargement
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
+                <div className="text-center">
+                    <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-400">Chargement du quiz...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // État d'erreur ou quiz non trouvé
+    if (error || !quiz) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold mb-4">Quiz introuvable</h1>
+                    <p className="text-gray-400 mb-6">{error || 'Le quiz demandé n\'existe pas.'}</p>
                     <Link href="/dashboard" className="text-purple-400 hover:underline">
                         Retour au Dashboard
                     </Link>
@@ -108,27 +182,23 @@ export default function QuizDetailsPage() {
         );
     }
 
-    // Données simulées pour l'affichage (à remplacer par des vraies données plus tard)
-    const playedCount = 3; // Exemple
-    const timeAgo = "il y a 1 mois"; // Exemple, pourrait être calculé depuis quiz.dateTimestamp
+    // Calcul du temps écoulé
+    const timeAgo = (() => {
+        const diff = Date.now() - new Date(quiz.createdAt).getTime();
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        if (days === 0) return "Aujourd'hui";
+        if (days === 1) return "Hier";
+        if (days < 30) return `il y a ${days} jours`;
+        const months = Math.floor(days / 30);
+        if (months === 1) return "il y a 1 mois";
+        return `il y a ${months} mois`;
+    })();
 
-    // Données mockées pour les questions (basées sur l'image fournie)
-    const mockQuestions = [
-        { id: 1, text: "Quel traité a officialisé le partage de l'empire carolingien ?", type: "Multiple Choice" },
-        { id: 2, text: "La France Occidentale, issue du partage de l'empire carolingien, est l'ancêtre de l'Allemagne actuelle.", type: "True or False" },
-        { id: 3, text: "Comment appelle-t-on les anciens esclaves qui ont été libérés ?", type: "Multiple Choice" },
-        { id: 4, text: "Les affranchis avaient le même statut social que les nobles.", type: "True or False" },
-    ];
+    // Nombre de joueurs
+    const playedCount = quiz.players.length;
 
-    // Données mockées pour les flashcards
-    const mockFlashcards = [
-        { id: 1, front: "Traité de Verdun", back: "Traité signé en 843 partageant l'empire carolingien en trois royaumes." },
-        { id: 2, front: "Missi Dominici", back: "Envoyés du maître chargés d'inspecter les comtés." },
-        { id: 3, front: "Capitulaire", back: "Acte législatif émanant des rois carolingiens." },
-    ];
-
-    // Récupération du résumé depuis le fichier de données
-    const quizSummary = getQuizSummary(quiz.id);
+    // Calcul du pourcentage de maîtrise (stub - à implémenter selon votre logique)
+    const masteryPercentage = 0; // TODO: Calculer selon l'historique du joueur
 
     return (
         <div className="min-h-screen bg-gray-900 text-white flex justify-center p-4 lg:p-8">
@@ -156,7 +226,7 @@ export default function QuizDetailsPage() {
                     <div>
                         {/* ID du Quiz */}
                         <div className="text-gray-500 text-sm mb-6">
-                            ID du Quiz : {quiz.id}
+                            ID du Quiz : {quiz.quizId}
                         </div>
 
                         {/* Métadonnées (Temps, Questions, Actions) */}
@@ -168,7 +238,7 @@ export default function QuizDetailsPage() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <HelpCircle className="w-4 h-4" />
-                                    <span>{quiz.questions} Questions</span>
+                                    <span>{quiz.questions.length} Questions</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-4">
@@ -197,7 +267,7 @@ export default function QuizDetailsPage() {
                         {/* Statistiques Rapides (Questions, Joué, Maitrise) */}
                         <div className="grid grid-cols-3 gap-4 mb-8 text-center">
                             <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
-                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{quiz.questions}</span>
+                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{quiz.questions.length}</span>
                                 <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Questions</span>
                             </div>
                             <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
@@ -205,7 +275,7 @@ export default function QuizDetailsPage() {
                                 <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Joué</span>
                             </div>
                             <div className="flex flex-col items-center p-4 bg-gray-800/30 rounded-xl border border-gray-700/30">
-                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{quiz.masteryPercentage}%</span>
+                                <span className="text-2xl lg:text-3xl font-bold text-purple-400">{masteryPercentage}%</span>
                                 <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Maitrise</span>
                             </div>
                         </div>
@@ -232,23 +302,23 @@ export default function QuizDetailsPage() {
                             <div className="space-y-4">
                                 {activeTab === 'questions' && (
                                     <div className="space-y-3">
-                                        {mockQuestions.map((q) => (
-                                            <div key={q.id} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors group">
+                                        {quiz.questions.map((q, index) => (
+                                            <div key={index} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors group">
                                                 <div className="flex justify-between items-start mb-3">
                                                     <h3 className="text-gray-200 font-medium leading-snug pr-4">
-                                                        {q.text}
+                                                        {q.question}
                                                     </h3>
                                                     <button className="text-gray-500 hover:text-white transition opacity-0 group-hover:opacity-100">
                                                         <MoreVertical className="w-5 h-5" />
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center text-xs font-medium text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-md w-fit">
-                                                    {q.type === 'Multiple Choice' ? (
+                                                    {q.type === 'multiple_choice' ? (
                                                         <ListChecks className="w-3.5 h-3.5 mr-1.5" />
                                                     ) : (
                                                         <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                                                     )}
-                                                    {q.type}
+                                                    {q.type === 'multiple_choice' ? 'Choix Multiple' : 'Vrai ou Faux'}
                                                 </div>
                                             </div>
                                         ))}
@@ -256,13 +326,24 @@ export default function QuizDetailsPage() {
                                 )}
                                 {activeTab === 'flashcards' && (
                                     <div className="space-y-3">
-                                        {mockFlashcards.map((card) => (
-                                            <div key={card.id} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors">
-                                                <div className="text-gray-200 font-medium mb-3">{card.front}</div>
-                                                <div className="h-px bg-gray-700/50 mb-3" />
-                                                <div className="text-gray-400 text-sm">{card.back}</div>
+                                        {quiz.flashcards.length > 0 ? (
+                                            quiz.flashcards.map((card, index) => (
+                                                <div key={index} className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4 hover:border-purple-500/30 transition-colors">
+                                                    <div className="text-gray-200 font-medium mb-3">{card.term}</div>
+                                                    <div className="h-px bg-gray-700/50 mb-3" />
+                                                    <div className="text-gray-400 text-sm mb-2">{card.definition}</div>
+                                                    {card.hint && (
+                                                        <div className="text-purple-400 text-xs italic mt-2">
+                                                            💡 {card.hint}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center text-gray-500 py-8">
+                                                Aucune flashcard disponible
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 )}
                                 {activeTab === 'notes' && (
@@ -285,7 +366,7 @@ export default function QuizDetailsPage() {
                                             prose-blockquote:text-gray-300 prose-blockquote:italic prose-blockquote:pl-4 prose-blockquote:py-3 prose-blockquote:my-4
                                             prose-hr:border-yellow-700/30 prose-hr:my-6">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                {quizSummary}
+                                                {quiz.notes || 'Aucun résumé disponible pour ce quiz.'}
                                             </ReactMarkdown>
                                         </div>
                                     </div>
@@ -312,13 +393,13 @@ export default function QuizDetailsPage() {
                             <div className="relative pt-2">
                                 <div className="flex items-center justify-between mb-2">
                                     <Award className="w-6 h-6 text-purple-400" />
-                                    <span className="text-purple-400 font-bold">{quiz.masteryPercentage}%</span>
+                                    <span className="text-purple-400 font-bold">{masteryPercentage}%</span>
                                 </div>
                                 <div className="w-full bg-gray-700 rounded-full h-3">
                                     <motion.div
                                         className="bg-purple-600 h-3 rounded-full shadow-[0_0_10px_rgba(147,51,234,0.5)]"
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${quiz.masteryPercentage}%` }}
+                                        animate={{ width: `${masteryPercentage}%` }}
                                         transition={{ duration: 1, ease: "easeOut" }}
                                     />
                                 </div>
@@ -382,4 +463,3 @@ export default function QuizDetailsPage() {
         </div>
     );
 }
-
