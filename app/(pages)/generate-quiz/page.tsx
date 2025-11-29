@@ -35,9 +35,6 @@ const maxQuestionsOptions = [
     { label: '20', value: '20' },
 ];
 
-
-
-
 /**
  * Page de génération de quiz accessible via /generate-quiz
  */
