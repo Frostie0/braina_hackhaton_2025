@@ -104,7 +104,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               <QuickStartCard
                 icon={Zap}
-                title="Generate"
+                title="Generate a quiz"
                 description="Transform anything into flashcards, quizzes and podcasts."
               />
               <QuickStartCard
