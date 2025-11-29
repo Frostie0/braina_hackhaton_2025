@@ -5,54 +5,19 @@ import { X, Check, X as XIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors } from '@/lib/colors';
 
-// Mock Data based on Quiz model
-const MOCK_QUIZ = {
-    title: "Histoire Médiévale",
-    questions: [
-        {
-            id: '1',
-            type: 'multiple_choice',
-            question: "Quel traité a officialisé le partage de l'empire carolingien ?",
-            options: ["Traité de Rome", "Traité de Versailles", "Traité de Verdun", "Traité de Paris"],
-            correctAnswer: "Traité de Verdun",
-            explanation: "Le Traité de Verdun, signé en 843, a divisé l'empire carolingien entre les petits-fils de Charlemagne."
-        },
-        {
-            id: '2',
-            type: 'multiple_choice',
-            question: "Comment appelle-t-on les anciens esclaves qui ont été libérés ?",
-            options: ["Les serfs", "Les affranchis", "Les vassaux", "Les citoyens"],
-            correctAnswer: "Les affranchis",
-            explanation: "Les affranchis sont des anciens esclaves qui ont obtenu leur liberté."
-        },
-        {
-            id: '3',
-            type: 'multiple_choice',
-            question: "Qui a été sacré empereur en l'an 800 ?",
-            options: ["Clovis", "Charlemagne", "Louis XIV", "Napoléon"],
-            correctAnswer: "Charlemagne",
-            explanation: "Charlemagne a été sacré empereur d'Occident par le pape Léon III à Rome le jour de Noël de l'an 800."
-        },
-        {
-            id: '4',
-            type: 'true_false',
-            question: "La peste noire a ravagé l'Europe au XIVe siècle.",
-            options: ["Vrai", "Faux"],
-            correctAnswer: "Vrai",
-            explanation: "La peste noire (1347-1352) a tué entre 30% et 50% de la population européenne."
-        },
-        {
-            id: '5',
-            type: 'multiple_choice',
-            question: "Quelle guerre a opposé la France et l'Angleterre pendant plus de 100 ans ?",
-            options: ["Guerre de Trente Ans", "Guerre de Cent Ans", "Guerre des Deux-Roses", "Guerre de Succession"],
-            correctAnswer: "Guerre de Cent Ans",
-            explanation: "La guerre de Cent Ans a opposé les royaumes de France et d'Angleterre de 1337 à 1453."
-        }
-    ]
-};
+interface QuizData {
+    title: string;
+    questions: Array<{
+        id: string;
+        type: string;
+        question: string;
+        options: string[];
+        correctAnswer: string;
+        explanation: string;
+    }>;
+}
 
-export default function QuizScreen({ quizId }: { quizId: string }) {
+export default function QuizScreen({ quiz }: { quiz: QuizData }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -66,8 +31,8 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
         isCorrect: boolean;
     }>>([]);
 
-    const currentQuestion = MOCK_QUIZ.questions[currentQuestionIndex];
-    const progress = ((currentQuestionIndex + 1) / MOCK_QUIZ.questions.length) * 100;
+    const currentQuestion = quiz.questions[currentQuestionIndex];
+    const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
 
     const handleOptionSelect = (option: string) => {
         if (!isSubmitted) {
@@ -95,7 +60,7 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
     };
 
     const handleNext = () => {
-        if (currentQuestionIndex < MOCK_QUIZ.questions.length - 1) {
+        if (currentQuestionIndex < quiz.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
             setSelectedOption(null);
             setIsSubmitted(false);
@@ -107,7 +72,7 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
     const isCorrect = selectedOption === currentQuestion.correctAnswer;
 
     if (showResult) {
-        const percentage = Math.round((score / MOCK_QUIZ.questions.length) * 100);
+        const percentage = Math.round((score / quiz.questions.length) * 100);
 
         return (
             <div
@@ -173,7 +138,7 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
                                     percentage >= 50 ? "Bien joué !" : "Continuez vos efforts !"}
                             </h2>
                             <p style={{ color: colors.grayText }}>
-                                Vous avez obtenu {score} sur {MOCK_QUIZ.questions.length} bonnes réponses.
+                                Vous avez obtenu {score} sur {quiz.questions.length} bonnes réponses.
                             </p>
                         </div>
                     </div>
@@ -262,7 +227,7 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
             <div className="flex items-center justify-between p-6 max-w-3xl mx-auto w-full">
                 <div className="flex items-center gap-4 flex-1">
                     <span className="font-medium text-lg" style={{ color: colors.grayText }}>
-                        {currentQuestionIndex + 1}/{MOCK_QUIZ.questions.length}
+                        {currentQuestionIndex + 1}/{quiz.questions.length}
                     </span>
                     <div className="h-2 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.gray2 }}>
                         <motion.div
@@ -411,7 +376,7 @@ export default function QuizScreen({ quizId }: { quizId: string }) {
                                     boxShadow: `0 10px 15px -3px ${isCorrect ? colors.green : colors.red}33`
                                 }}
                             >
-                                {currentQuestionIndex < MOCK_QUIZ.questions.length - 1 ? 'Continuer' : 'Voir les résultats'}
+                                {currentQuestionIndex < quiz.questions.length - 1 ? 'Continuer' : 'Voir les résultats'}
                             </button>
                         </div>
                     </motion.div>
