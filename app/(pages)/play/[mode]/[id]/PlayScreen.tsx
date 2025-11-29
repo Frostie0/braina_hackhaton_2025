@@ -4,12 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import QuizScreen from '@/app/(pages)/quiz/QuizScreen';
 import FlashcardScreen from '@/app/(pages)/flashcard/flashcardScreen';
+import MultiplayerQuizScreen from './MultiplayerQuizScreen';
 
 interface PlayConfig {
     mode: 'quiz' | 'flashcards' | 'exam' | 'multiplayer';
     quizId: string;
-    questionsPerSession: number;
+    questionsPerSession: number | 'all';
     shuffleQuestions: boolean;
+    roomCode?: string;
+    multiplayerConfig?: {
+        questionsPerSession: number | 'all';
+        maxPlayers: number;
+        timePerQuestion: number;
+    };
 }
 
 interface PlayScreenProps {
@@ -162,6 +169,16 @@ const MOCK_QUIZ_DATA = {
     }
 };
 
+// Fonction de mélange Fisher-Yates (shuffle aléatoire fiable)
+const shuffleArray = <T,>(array: T[]): T[] => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+};
+
 export default function PlayScreen({ config }: PlayScreenProps) {
     const router = useRouter();
     const [data, setData] = useState<any>(null);
@@ -184,14 +201,14 @@ export default function PlayScreen({ config }: PlayScreenProps) {
                 if (config.mode === 'quiz') {
                     let questions = [...mockData.questions];
 
-                    // Limiter le nombre de questions selon la configuration
-                    if (config.questionsPerSession < questions.length) {
-                        questions = questions.slice(0, config.questionsPerSession);
+                    // Mélanger les questions AVANT de limiter si demandé
+                    if (config.shuffleQuestions) {
+                        questions = shuffleArray(questions);
                     }
 
-                    // Mélanger les questions si demandé
-                    if (config.shuffleQuestions) {
-                        questions = questions.sort(() => Math.random() - 0.5);
+                    // Limiter le nombre de questions selon la configuration
+                    if (config.questionsPerSession !== 'all' && typeof config.questionsPerSession === 'number' && config.questionsPerSession < questions.length) {
+                        questions = questions.slice(0, config.questionsPerSession);
                     }
 
                     processedData = {
@@ -204,14 +221,14 @@ export default function PlayScreen({ config }: PlayScreenProps) {
                 if (config.mode === 'flashcards') {
                     let flashcards = [...mockData.flashcards];
 
-                    // Limiter le nombre de flashcards selon la configuration
-                    if (config.questionsPerSession < flashcards.length) {
-                        flashcards = flashcards.slice(0, config.questionsPerSession);
+                    // Mélanger les flashcards AVANT de limiter si demandé
+                    if (config.shuffleQuestions) {
+                        flashcards = shuffleArray(flashcards);
                     }
 
-                    // Mélanger les flashcards si demandé
-                    if (config.shuffleQuestions) {
-                        flashcards = flashcards.sort(() => Math.random() - 0.5);
+                    // Limiter le nombre de flashcards selon la configuration
+                    if (config.questionsPerSession !== 'all' && typeof config.questionsPerSession === 'number' && config.questionsPerSession < flashcards.length) {
+                        flashcards = flashcards.slice(0, config.questionsPerSession);
                     }
 
                     processedData = {
@@ -268,18 +285,15 @@ export default function PlayScreen({ config }: PlayScreenProps) {
             return <QuizScreen quiz={data} />;
         case 'multiplayer':
             return (
-                <div className="min-h-screen bg-black flex items-center justify-center text-white px-4">
-                    <div className="text-center max-w-md">
-                        <h1 className="text-3xl font-serif font-medium mb-4">Mode Multijoueur</h1>
-                        <p className="text-gray-400 mb-8">Cette fonctionnalité sera bientôt disponible !</p>
-                        <button
-                            onClick={() => router.push(`/quiz/${config.quizId}`)}
-                            className="px-6 py-3 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors font-medium"
-                        >
-                            Retour au quiz
-                        </button>
-                    </div>
-                </div>
+                <MultiplayerQuizScreen
+                    quiz={data}
+                    roomCode={config.roomCode || 'DEMO123'}
+                    config={config.multiplayerConfig || {
+                        questionsPerSession: 10,
+                        maxPlayers: 5,
+                        timePerQuestion: 15
+                    }}
+                />
             );
         default:
             return <QuizScreen quiz={data} />;

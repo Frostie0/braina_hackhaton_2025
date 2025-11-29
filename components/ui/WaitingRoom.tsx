@@ -42,13 +42,13 @@ export default function WaitingRoom({
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
+        <div className="fixed inset-0 bg-black z-50 flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-800">
-                <h1 className="text-2xl font-bold text-white">Salle d'attente</h1>
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h1 className="text-2xl font-serif font-medium text-white">Salle d'attente</h1>
                 <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
+                    className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10"
                 >
                     <X className="w-6 h-6" />
                 </button>
@@ -57,21 +57,21 @@ export default function WaitingRoom({
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
                 {/* Room Code Card */}
-                <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6 mb-6">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
                     <div className="text-center">
                         <p className="text-gray-400 text-sm mb-2">Code de la partie</p>
-                        <h2 className="text-4xl font-bold text-white mb-4 tracking-wider">
+                        <h2 className="text-4xl font-bold text-white mb-4 tracking-wider font-mono">
                             {roomCode}
                         </h2>
                         <div className="flex items-center justify-center gap-3">
                             <button
                                 onClick={handleShare}
-                                className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition flex items-center gap-2 shadow-lg shadow-purple-900/40"
+                                className="px-6 py-2.5 bg-white hover:bg-gray-200 text-black font-medium rounded-xl transition flex items-center gap-2"
                             >
                                 <Share2 className="w-4 h-4" />
                                 {showCopied ? 'Copié !' : 'Partager'}
                             </button>
-                            <button className="p-2.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition">
+                            <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 transition">
                                 <MoreVertical className="w-5 h-5" />
                             </button>
                         </div>
@@ -80,7 +80,7 @@ export default function WaitingRoom({
 
                 {/* Players List */}
                 <div className="mb-6">
-                    <h3 className="text-white font-semibold mb-4">
+                    <h3 className="text-white font-serif font-medium mb-4 text-lg">
                         Joueurs ({currentPlayers.length}/{maxPlayers})
                     </h3>
                     <div className="space-y-3">
@@ -89,7 +89,7 @@ export default function WaitingRoom({
                                 key={player.id}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="flex items-center justify-between p-4 bg-gray-800/30 border border-gray-700/50 rounded-xl"
+                                className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl"
                             >
                                 <div className="flex items-center gap-3">
                                     <div
@@ -103,7 +103,7 @@ export default function WaitingRoom({
                                     </div>
                                 </div>
                                 {player.isHost && (
-                                    <span className="px-3 py-1 bg-gray-700 text-gray-200 text-sm font-medium rounded-lg">
+                                    <span className="px-3 py-1 bg-white/10 text-white text-sm font-medium rounded-lg border border-white/20">
                                         Hôte
                                     </span>
                                 )}
@@ -114,9 +114,9 @@ export default function WaitingRoom({
                         {Array.from({ length: maxPlayers - currentPlayers.length }).map((_, i) => (
                             <div
                                 key={`empty-${i}`}
-                                className="flex items-center gap-3 p-4 bg-gray-800/10 border border-gray-700/30 rounded-xl border-dashed opacity-50"
+                                className="flex items-center gap-3 p-4 bg-white/5 border border-white/10 border-dashed rounded-xl opacity-40"
                             >
-                                <div className="w-12 h-12 rounded-full bg-gray-700/50" />
+                                <div className="w-12 h-12 rounded-full bg-white/10" />
                                 <p className="text-gray-500">En attente...</p>
                             </div>
                         ))}
@@ -126,14 +126,14 @@ export default function WaitingRoom({
 
             {/* Footer */}
             {isHost && (
-                <div className="p-6 border-t border-gray-800 bg-gray-900/95 backdrop-blur-sm">
+                <div className="p-6 border-t border-white/10 bg-black/95 backdrop-blur-sm">
                     <div className="max-w-2xl mx-auto">
                         <button
                             onClick={onStartGame}
                             disabled={currentPlayers.length < 2}
-                            className={`w-full py-4 rounded-xl font-bold text-lg transition shadow-lg ${currentPlayers.length >= 2
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-900/40'
-                                    : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            className={`w-full py-4 rounded-xl font-bold text-lg transition ${currentPlayers.length >= 2
+                                    ? 'bg-white hover:bg-gray-200 text-black'
+                                    : 'bg-white/10 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             Commencer la partie

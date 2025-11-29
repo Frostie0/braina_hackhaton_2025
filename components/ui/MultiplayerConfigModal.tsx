@@ -77,8 +77,8 @@ export default function MultiplayerConfigModal({
                                 <button
                                     onClick={() => setQuestionsPerSession('all')}
                                     className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === 'all'
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                         }`}
                                 >
                                     All
@@ -86,8 +86,8 @@ export default function MultiplayerConfigModal({
                                 <button
                                     onClick={() => setQuestionsPerSession(5)}
                                     className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === 5
-                                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                         }`}
                                 >
                                     5

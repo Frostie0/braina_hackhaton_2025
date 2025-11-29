@@ -12,8 +12,9 @@ interface GamePreferencesModalProps {
 }
 
 export interface GamePreferences {
-    questionsPerSession: number;
+    questionsPerSession: number | 'all';
     shuffleQuestions: boolean;
+    totalQuestions?: number; // To know the max
 }
 
 export default function GamePreferencesModal({
@@ -22,10 +23,11 @@ export default function GamePreferencesModal({
     onStart,
     mode
 }: GamePreferencesModalProps) {
-    const [questionsPerSession, setQuestionsPerSession] = useState(5);
+    const [questionsPerSession, setQuestionsPerSession] = useState<number | 'all'>('all');
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
 
-    const questionOptions = [5, 8, 10, 15, 20];
+    // Générer les options de questions (multiples de 5)
+    const questionOptions: (number | 'all')[] = ['all', 5, 10, 15, 20, 25, 30];
 
     const handleStart = () => {
         onStart({
@@ -41,8 +43,6 @@ export default function GamePreferencesModal({
                 return 'Comment aimeriez-vous jouer?';
             case 'flashcards':
                 return 'Configurez vos flashcards';
-            case 'exam':
-                return 'Configuration du mode examen';
             case 'multiplayer':
                 return 'Paramètres du jeu multijoueur';
             default:
@@ -102,7 +102,7 @@ export default function GamePreferencesModal({
                                                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                                         }`}
                                                 >
-                                                    {option}
+                                                    {option === 'all' ? 'Tout' : option}
                                                 </button>
                                             ))}
                                         </div>
