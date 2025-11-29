@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Poppins } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+// 2. Configurez Poppins
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ['400', '600', '700'], // Choisissez les poids dont vous avez besoin
+  variable: "--font-poppins", // Optionnel, si vous voulez l'utiliser via CSS
 });
 
 const geistMono = Geist_Mono({
@@ -25,8 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+        className={`${poppins.className} ${geistSans.variable} ${geistMono.variable} antialiased`}      >
         {children}
       </body>
     </html>
