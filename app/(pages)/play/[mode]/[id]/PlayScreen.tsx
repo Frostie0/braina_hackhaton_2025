@@ -6,6 +6,7 @@ import QuizScreen from '@/app/(pages)/quiz/QuizScreen';
 import FlashcardScreen from '@/app/(pages)/flashcard/flashcardScreen';
 import MultiplayerQuizScreen from './MultiplayerQuizScreen';
 import TicTacToeMultiplayerScreen from './TicTacToeMultiplayerScreen';
+import ExamScreen from './ExamScreen';
 
 interface PlayConfig {
     mode: 'quiz' | 'flashcards' | 'exam' | 'multiplayer';
@@ -282,8 +283,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
         case 'flashcards':
             return <FlashcardScreen quiz={data} />;
         case 'exam':
-            // TODO: Créer ExamScreen component avec mode évaluation (pas de feedback immédiat, chronomètre global)
-            return <QuizScreen quiz={data} />;
+            return <ExamScreen quiz={data} />;
         case 'multiplayer':
             return (
                 <TicTacToeMultiplayerScreen
