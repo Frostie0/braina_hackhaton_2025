@@ -38,14 +38,13 @@ const Navbar = () => {
         <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2">
-                    <ApplicationLogo size={24} />
+                    <ApplicationLogo size={52} />
                 </Link>
 
                 {/* Desktop Menu */}
                 <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
                     <a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a>
                     <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
-                    <a href="#" className="hover:text-white transition-colors">Tarifs</a>
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
@@ -269,7 +268,7 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-20">
                 <div className="col-span-2 lg:col-span-2">
                     <Link href="/" className="flex items-center gap-2 mb-6">
-                        <ApplicationLogo size={28} />
+                        <ApplicationLogo size={52} />
                     </Link>
                     <p className="text-gray-400 max-w-xs mb-8">
                         L'intelligence artificielle au service de votre réussite académique.
@@ -286,7 +285,6 @@ const Footer = () => {
                     <h4 className="font-medium text-white mb-6">Produit</h4>
                     <ul className="space-y-4 text-sm text-gray-400">
                         <li><a href="#" className="hover:text-white transition-colors">Fonctionnalités</a></li>
-                        <li><a href="#" className="hover:text-white transition-colors">Tarification</a></li>
                         <li><a href="#" className="hover:text-white transition-colors">Pour les Écoles</a></li>
                         <li><a href="#" className="hover:text-white transition-colors">Mises à jour</a></li>
                     </ul>

@@ -79,17 +79,17 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
         return (
             <div
                 className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden"
-                style={{ backgroundColor: colors.white, color: colors.black }}
+                style={{ backgroundColor: colors.black, color: colors.white }}
             >
                 {/* Header */}
                 <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-6 max-w-3xl mx-auto w-full z-10">
-                    <h1 className="text-2xl font-bold" style={{ color: colors.primary }}>Résultats du quiz</h1>
+                    <h1 className="text-2xl font-bold" style={{ color: colors.white }}>Résultats du quiz</h1>
                     <button
                         onClick={() => router.push('/dashboard')}
                         className="p-2 rounded-full transition-colors"
                         style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                     >
-                        <X className="w-6 h-6" style={{ color: colors.grayText }} />
+                        <X className="w-6 h-6" style={{ color: colors.white }} />
                     </button>
                 </div>
 
@@ -99,7 +99,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                         className="rounded-3xl p-8 mb-8 flex items-center gap-8 relative overflow-hidden border"
                         style={{
                             backgroundColor: colors.gray2,
-                            borderColor: `${colors.secondary}4D` // 30% opacity
+                            borderColor: 'rgba(255,255,255,0.1)'
                         }}
                     >
                         <div
@@ -114,7 +114,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                     cx="64"
                                     cy="64"
                                     r="56"
-                                    stroke={colors.gray}
+                                    stroke="rgba(255,255,255,0.1)"
                                     strokeWidth="12"
                                     fill="transparent"
                                 />
@@ -131,11 +131,11 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                     strokeLinecap="round"
                                 />
                             </svg>
-                            <span className="absolute text-3xl font-bold" style={{ color: colors.primary }}>{percentage}%</span>
+                            <span className="absolute text-3xl font-bold" style={{ color: colors.white }}>{percentage}%</span>
                         </div>
 
                         <div className="flex-1 z-10">
-                            <h2 className="text-2xl font-bold mb-2" style={{ color: colors.primary }}>
+                            <h2 className="text-2xl font-bold mb-2" style={{ color: colors.white }}>
                                 {percentage >= 80 ? "Excellent travail !" :
                                     percentage >= 50 ? "Bien joué !" : "Continuez vos efforts !"}
                             </h2>
@@ -152,12 +152,12 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                 key={index}
                                 className="border rounded-2xl p-6"
                                 style={{
-                                    backgroundColor: `${colors.gray2}80`, // 50% opacity
-                                    borderColor: colors.gray
+                                    backgroundColor: colors.gray2,
+                                    borderColor: 'rgba(255,255,255,0.1)'
                                 }}
                             >
                                 <div className="flex items-start justify-between mb-4">
-                                    <h3 className="text-lg font-semibold" style={{ color: colors.black }}>Question {index + 1}</h3>
+                                    <h3 className="text-lg font-semibold" style={{ color: colors.white }}>Question {index + 1}</h3>
                                     {answer.isCorrect ? (
                                         <div className="p-1.5 rounded-full" style={{ backgroundColor: `${colors.green}33` }}>
                                             <Check className="w-4 h-4" style={{ color: colors.green }} />
@@ -209,7 +209,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                         className="w-full py-4 mt-8 rounded-xl font-semibold text-lg transition-colors shadow-lg"
                         style={{
                             backgroundColor: colors.accent,
-                            color: '#fff', // Assuming white text on accent
+                            color: '#fff',
                             boxShadow: `0 10px 15px -3px ${colors.accent}33`
                         }}
                     >
@@ -223,15 +223,15 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
     return (
         <div
             className="min-h-screen flex flex-col relative overflow-hidden"
-            style={{ backgroundColor: colors.white, color: colors.black }}
+            style={{ backgroundColor: colors.black, color: colors.white }}
         >
             {/* Header */}
             <div className="flex items-center justify-between p-6 max-w-3xl mx-auto w-full">
                 <div className="flex items-center gap-4 flex-1">
-                    <span className="font-medium text-lg" style={{ color: colors.grayText }}>
+                    <span className="font-medium text-lg" style={{ color: colors.white }}>
                         {currentQuestionIndex + 1}/{quiz.questions.length}
                     </span>
-                    <div className="h-2 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: colors.gray2 }}>
+                    <div className="h-2 flex-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
                         <motion.div
                             className="h-full rounded-full"
                             style={{ backgroundColor: colors.secondary }}
@@ -244,9 +244,9 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                 <button
                     onClick={() => router.push('/dashboard')}
                     className="p-2 rounded-full transition-colors ml-4"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
+                    style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
                 >
-                    <X className="w-6 h-6" style={{ color: colors.grayText }} />
+                    <X className="w-6 h-6" style={{ color: colors.white }} />
                 </button>
             </div>
 
@@ -259,7 +259,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                     exit={{ opacity: 0, x: -20 }}
                     className="flex-1"
                 >
-                    <h2 className="text-2xl md:text-3xl font-semibold leading-tight mb-12" style={{ color: colors.primary }}>
+                    <h2 className="text-2xl md:text-3xl font-semibold leading-tight mb-12" style={{ color: colors.white }}>
                         {currentQuestion.question}
                     </h2>
 
@@ -267,7 +267,6 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                         {currentQuestion.options.map((option, index) => {
                             let buttonStyle = {};
                             let icon = null;
-                            let textClass = "";
 
                             if (isSubmitted) {
                                 if (option === currentQuestion.correctAnswer) {
@@ -286,9 +285,10 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                     icon = <XIcon className="w-5 h-5" style={{ color: colors.red }} />;
                                 } else {
                                     buttonStyle = {
-                                        backgroundColor: `${colors.gray2}80`,
-                                        borderColor: colors.gray,
-                                        opacity: 0.5
+                                        backgroundColor: colors.gray2,
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        opacity: 0.5,
+                                        color: colors.grayText
                                     };
                                 }
                             } else if (selectedOption === option) {
@@ -299,8 +299,9 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                 };
                             } else {
                                 buttonStyle = {
-                                    backgroundColor: `${colors.gray2}80`,
-                                    borderColor: colors.gray
+                                    backgroundColor: colors.gray2,
+                                    borderColor: 'rgba(255,255,255,0.1)',
+                                    color: colors.white
                                 };
                             }
 
@@ -327,20 +328,20 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                     <div
                         className="fixed bottom-0 left-0 right-0 p-6 border-t"
                         style={{
-                            backgroundColor: colors.white,
-                            borderColor: `${colors.gray}80`
+                            backgroundColor: colors.black,
+                            borderColor: 'rgba(255,255,255,0.1)'
                         }}
                     >
                         <div className="max-w-3xl mx-auto">
                             <button
                                 onClick={handleSubmit}
                                 disabled={!selectedOption}
-                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform active:scale-[0.98]`}
+                                className={`w-full py-4 rounded-xl font-bold text-lg text-white transition-all transform active:scale-[0.98]`}
                                 style={{
                                     backgroundColor: selectedOption ? colors.accent : colors.gray2,
-                                    color: selectedOption ? '#fff' : colors.gray,
                                     cursor: selectedOption ? 'pointer' : 'not-allowed',
-                                    boxShadow: selectedOption ? `0 10px 15px -3px ${colors.accent}33` : 'none'
+                                    boxShadow: selectedOption ? `0 10px 15px -3px ${colors.accent}33` : 'none',
+                                    opacity: selectedOption ? 1 : 0.5
                                 }}
                             >
                                 Soumettre
@@ -367,7 +368,7 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                                 >
                                     {isCorrect ? 'Correct !' : 'Incorrect'}
                                 </h3>
-                                <p className="leading-relaxed" style={{ color: colors.grayText }}>
+                                <p className="leading-relaxed" style={{ color: colors.white }}>
                                     {currentQuestion.explanation}
                                 </p>
                             </div>
