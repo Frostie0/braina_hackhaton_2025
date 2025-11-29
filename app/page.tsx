@@ -8,6 +8,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from '../components/layout/Sidebar';
 import { RightPanel, RightPanelMobile } from '../components/layout/RightPanel';
 import { QuickStartCard } from '../components/ui/QuickStartCard';
+import QuizFlatList from '../components/ui/QuizFlatList'; // NOUVEAU: Import du FlatList
+import { quizData } from '@/lib/data/quiz'; // NOUVEAU: Import des données
+
 
 // Le composant principal
 export default function DashboardPage() {
@@ -64,7 +67,7 @@ export default function DashboardPage() {
             key="sidebar"
             isSidebarOpen={isSidebarOpen}
             setIsSidebarOpen={setIsSidebarOpen}
-            isDesktop={isDesktop}
+            isDesktop={isDesktop} // PASSAGE DE LA PROP isDesktop
           />
         )}
 
@@ -94,6 +97,7 @@ export default function DashboardPage() {
           {/* Titre d'accueil */}
           <h1 className="text-3xl font-bold mb-4 md:mb-8 text-white">Welcome Christan Denison Victor!</h1>
 
+
           {/* Section Quick Start */}
           <section className="mb-10">
             <h2 className="text-xl font-semibold mb-4 text-gray-300 border-l-4 border-purple-500 pl-3">Quick start</h2>
@@ -115,6 +119,9 @@ export default function DashboardPage() {
               />
             </div>
           </section>
+
+          {/* SECTION: CONTINUER L'APPRENTISSAGE (Quiz FlatList avec tri) */}
+          <QuizFlatList quizzes={quizData} title="Continuer l'apprentissage" />
 
           {/* Panneau de droite sur Mobile (affiché en bas du contenu) */}
           <RightPanelMobile />
