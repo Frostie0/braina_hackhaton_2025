@@ -8,6 +8,7 @@ interface MultiplayerConfigModalProps {
     isOpen: boolean;
     onClose: () => void;
     onCreateRoom: (config: MultiplayerConfig) => void;
+    totalQuestions: number;
 }
 
 export interface MultiplayerConfig {
@@ -19,7 +20,8 @@ export interface MultiplayerConfig {
 export default function MultiplayerConfigModal({
     isOpen,
     onClose,
-    onCreateRoom
+    onCreateRoom,
+    totalQuestions
 }: MultiplayerConfigModalProps) {
     const [questionsPerSession, setQuestionsPerSession] = useState<number | 'all'>('all');
     const [maxPlayers, setMaxPlayers] = useState(5);
@@ -73,25 +75,33 @@ export default function MultiplayerConfigModal({
                         {/* Questions per session */}
                         <div>
                             <h4 className="text-white font-medium mb-3">Questions par session</h4>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setQuestionsPerSession('all')}
-                                    className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === 'all'
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                        }`}
-                                >
-                                    All
-                                </button>
-                                <button
-                                    onClick={() => setQuestionsPerSession(5)}
-                                    className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === 5
-                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                        }`}
-                                >
-                                    5
-                                </button>
+                            <div className="flex flex-wrap gap-2">
+                                {(() => {
+                                    const options: (number | 'all')[] = ['all'];
+
+                                    // Generate multiples of 5, but only if they don't exceed total questions
+                                    for (let i = 5; i < totalQuestions; i += 5) {
+                                        options.push(i);
+                                    }
+
+                                    // Only add the exact total if it's a multiple of 5
+                                    if (totalQuestions % 5 === 0 && totalQuestions > 0) {
+                                        options.push(totalQuestions);
+                                    }
+
+                                    return options.map((option) => (
+                                        <button
+                                            key={option}
+                                            onClick={() => setQuestionsPerSession(option)}
+                                            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${questionsPerSession === option
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                                }`}
+                                        >
+                                            {option === 'all' ? 'Tout' : option}
+                                        </button>
+                                    ));
+                                })()}
                             </div>
                         </div>
 

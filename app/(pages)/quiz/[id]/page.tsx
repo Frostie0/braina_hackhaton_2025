@@ -6,12 +6,12 @@ import { motion } from 'framer-motion';
 import { X, Share2, Trash2, Clock, HelpCircle, PlayCircle, Award, MoreVertical, ListChecks, CheckCircle2, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import axios from 'axios';
+import { shuffle } from '@/lib/shuffle';
 import { serverIp } from '@/lib/serverIp';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ModeSelectionModal from '@/components/ui/ModeSelectionModal';
 import GamePreferencesModal, { GamePreferences } from '@/components/ui/GamePreferencesModal';
 import MultiplayerConfigModal from '@/components/ui/MultiplayerConfigModal';
-import WaitingRoom from '@/components/ui/WaitingRoom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -126,17 +126,60 @@ export default function QuizDetailsPage() {
         }
     };
 
-    const handleCreateMultiplayerRoom = (config: any) => {
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-        setRoomCode(code);
-        setMultiplayerConfig(config);
-        setIsMultiplayerConfigOpen(false);
-        setIsWaitingRoomOpen(true);
+    const handleCreateMultiplayerRoom = async (config: any) => {
+        try {
+            setIsMultiplayerConfigOpen(false);
+
+            const totalQuestionsCount = quiz?.questions.length || 0;
+            const questionsParam = config?.questionsPerSession === 'all'
+                ? totalQuestionsCount
+                : (config?.questionsPerSession ?? totalQuestionsCount);
+
+            // Construire la liste des questions à envoyer au backend (si nécessaire)
+            const payloadQuestions = (quiz?.questions || []).slice(0, questionsParam).map((q) => ({
+                type: q.type,
+                question: q.question,
+                options: q.options || [],
+                correctAnswer: q.correctAnswer,
+                explanation: q.explanation
+            }));
+
+            const settings = {
+                maxPlayers: Number(config?.maxPlayers ?? 5),
+                timePerQuestion: Number(config?.timePerQuestion ?? 20),
+            };
+
+            const res = await axios.post(`${serverIp}/game/create`, {
+                hostId: 'host-temp',
+                settings,
+                questions: payloadQuestions
+            });
+
+            const code = res.data?.gameCode;
+            if (!code) throw new Error('gameCode manquant');
+
+            const queryParams = new URLSearchParams({
+                id,
+                room: code,
+                maxPlayers: String(settings.maxPlayers),
+                questions: String(questionsParam),
+                isHost: 'true'
+            });
+
+            router.push(`/waintroom?${queryParams.toString()}`);
+        } catch (e) {
+            console.error('Erreur création salle multi:', e);
+        }
     };
 
     const handleStartMultiplayerGame = () => {
+        const totalQuestionsCount = quiz?.questions.length || 0;
+        const questionCount = multiplayerConfig.questionsPerSession === 'all'
+            ? totalQuestionsCount
+            : multiplayerConfig.questionsPerSession;
+
         const queryParams = new URLSearchParams({
-            questions: multiplayerConfig.questionsPerSession === 'all' ? '10' : multiplayerConfig.questionsPerSession.toString(),
+            questions: questionCount.toString(),
             shuffle: 'true',
             multiplayer: 'true',
             room: roomCode
@@ -146,8 +189,13 @@ export default function QuizDetailsPage() {
     };
 
     const handleStartGame = (preferences: GamePreferences) => {
+        const totalQuestionsCount = quiz?.questions.length || 0;
+        const questionCount = preferences.questionsPerSession === 'all'
+            ? totalQuestionsCount
+            : preferences.questionsPerSession;
+
         const queryParams = new URLSearchParams({
-            questions: preferences.questionsPerSession.toString(),
+            questions: questionCount.toString(),
             shuffle: preferences.shuffleQuestions.toString()
         });
 
@@ -435,26 +483,20 @@ export default function QuizDetailsPage() {
                     onClose={() => setIsPreferencesOpen(false)}
                     onStart={handleStartGame}
                     mode={selectedMode}
+                    totalQuestions={
+                        selectedMode === 'flashcards'
+                            ? (quiz?.flashcards.length || 0)
+                            : (quiz?.questions.length || 0)
+                    }
                 />
 
                 <MultiplayerConfigModal
                     isOpen={isMultiplayerConfigOpen}
                     onClose={() => setIsMultiplayerConfigOpen(false)}
                     onCreateRoom={handleCreateMultiplayerRoom}
+                    totalQuestions={quiz?.questions.length || 0}
                 />
 
-                {isWaitingRoomOpen && (
-                    <WaitingRoom
-                        roomCode={roomCode}
-                        currentPlayers={[
-                            { id: '1', name: 'Shadow', avatar: '#8B5CF6', isHost: true }
-                        ]}
-                        maxPlayers={multiplayerConfig?.maxPlayers || 5}
-                        onClose={() => setIsWaitingRoomOpen(false)}
-                        onStartGame={handleStartMultiplayerGame}
-                        isHost={true}
-                    />
-                )}
 
             </motion.div>
         </div>

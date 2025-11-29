@@ -9,6 +9,7 @@ interface GamePreferencesModalProps {
     onClose: () => void;
     onStart: (preferences: GamePreferences) => void;
     mode: string;
+    totalQuestions: number;
 }
 
 export interface GamePreferences {
@@ -21,13 +22,31 @@ export default function GamePreferencesModal({
     isOpen,
     onClose,
     onStart,
-    mode
+    mode,
+    totalQuestions
 }: GamePreferencesModalProps) {
     const [questionsPerSession, setQuestionsPerSession] = useState<number | 'all'>('all');
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
 
     // Générer les options de questions (multiples de 5)
-    const questionOptions: (number | 'all')[] = ['all', 5, 10, 15, 20, 25, 30];
+    const generateQuestionOptions = (): (number | 'all')[] => {
+        const options: (number | 'all')[] = ['all'];
+
+        // Generate multiples of 5, but only if they don't exceed total questions
+        // If we have 7 questions, we only show 5, not 10
+        for (let i = 5; i < totalQuestions; i += 5) {
+            options.push(i);
+        }
+
+        // Only add the exact total if it's a multiple of 5
+        if (totalQuestions % 5 === 0 && totalQuestions > 0) {
+            options.push(totalQuestions);
+        }
+
+        return options;
+    };
+
+    const questionOptions = generateQuestionOptions();
 
     const handleStart = () => {
         onStart({

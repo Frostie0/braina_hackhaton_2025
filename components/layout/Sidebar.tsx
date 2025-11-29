@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
 import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
@@ -29,11 +31,14 @@ const profileMenuItems: NavItem[] = [
 ];
 
 // Sous-composant pour un élément de la barre latérale
-const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?: boolean }> = ({ icon: Icon, label, isActive }) => (
-    <div className={`flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
-        ? 'bg-white/10 text-white font-medium'
-        : 'text-gray-400 hover:bg-white/5 hover:text-white'
-        }`}>
+const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?: boolean; onClick?: () => void }> = ({ icon: Icon, label, isActive, onClick }) => (
+    <div
+        onClick={onClick}
+        className={`flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
+            ? 'bg-white/10 text-white font-medium'
+            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+    >
         <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
         <span className="text-sm tracking-wide">{label}</span>
     </div>
@@ -116,6 +121,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen, isDesktop }) => {
 
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+    const router = useRouter();
 
     const toggleProfileMenu = () => {
         setIsProfileMenuOpen(prev => !prev);
@@ -137,6 +143,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                             isActive={item.label === 'Accueil'}
                         />
                     ))}
+                    {/* Lien pour rejoindre une partie multijoueur */}
+                    <SidebarItem
+                        icon={BookOpen}
+                        label="Rejoindre une partie"
+                        onClick={() => {
+                            router.push('/multiplayer/join');
+                            if (!isDesktop) setIsSidebarOpen(false);
+                        }}
+                    />
                 </nav>
 
                 {/* Section Dossiers (Style épuré) */}

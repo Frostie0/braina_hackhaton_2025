@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Trophy, Circle, User, AlertCircle, CheckCircle2, XCircle, Timer, Heart, HeartCrack } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { io, Socket } from 'socket.io-client';
+import { serverIp } from '@/lib/serverIp';
 
 interface Question {
     id: string;
@@ -38,6 +40,7 @@ interface TicTacToeMultiplayerScreenProps {
         questionsPerSession: number | 'all';
         maxPlayers: number;
         timePerQuestion: number;
+        isHost?: boolean;
     };
 }
 
@@ -108,22 +111,116 @@ export default function TicTacToeMultiplayerScreen({
 
     const currentPlayer = players[currentPlayerIndex];
 
-    // Turn Timer Logic (Choosing a cell)
+    // Etat serveur TicTacToe
+    const [serverTurn, setServerTurn] = useState<'X'|'O'>('X');
+    const [symbolsMap, setSymbolsMap] = useState<Record<string, 'X'|'O'>>({});
+    const [heartsMap, setHeartsMap] = useState<Record<string, number>>({});
+    const [turnStart, setTurnStart] = useState<number>(Date.now());
+    const [myUserId] = useState(() => {
+        if (typeof window === 'undefined') return '';
+        let userId = localStorage.getItem('braina_user_id');
+        if (!userId) {
+            userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+            localStorage.setItem('braina_user_id', userId);
+        }
+        return userId;
+    });
+    const mySymbol = useMemo(() => symbolsMap[myUserId] as ('X'|'O'|undefined), [symbolsMap, myUserId]);
+
+    // Socket.IO
+    const socketRef = useRef<Socket | null>(null);
+    const getServerBaseUrl = (httpUrl: string) => {
+        try {
+            const url = new URL(httpUrl);
+            const cleanedPath = url.pathname.replace(/\/?api\/.*/i, '');
+            url.pathname = cleanedPath.endsWith('/') ? cleanedPath : `${cleanedPath}/`;
+            return (url.origin + url.pathname.replace(/\/$/, ''));
+        } catch {
+            return httpUrl.replace(/\/?api\/.*/i, '').replace(/\/$/, '');
+        }
+    };
+    const socketBase = useMemo(() => getServerBaseUrl(serverIp), []);
+
+    const getUserId = (): string => {
+        if (typeof window === 'undefined') return '';
+        let userId = localStorage.getItem('braina_user_id');
+        if (!userId) {
+            userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+            localStorage.setItem('braina_user_id', userId);
+        }
+        return userId;
+    };
+    const getUserName = (): string => {
+        if (typeof window === 'undefined') return '';
+        let userName = localStorage.getItem('braina_user_name');
+        if (!userName) {
+            userName = `Joueur${Math.floor(Math.random() * 1000)}`;
+            localStorage.setItem('braina_user_name', userName);
+        }
+        return userName;
+    };
+
+    // Connexion et abonnement aux événements
+    useEffect(() => {
+        if (!roomCode) return;
+        const socket = io(socketBase, { transports: ['websocket'], reconnection: true, reconnectionAttempts: 5 });
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            const userId = getUserId();
+            const userName = getUserName();
+            socket.emit('join_game', { gameCode: roomCode, userId, userName, isHost: !!config?.isHost });
+        });
+
+        // Etat de jeu autoritaire
+        socket.on('ttt_state', (s: { grid: GridCell[]; currentTurn: 'X'|'O'; hearts: Record<string, number>; symbols: Record<string,'X'|'O'>; winner: any; turnStart: number; }) => {
+            setGrid(s.grid as GridCell[]);
+            setServerTurn(s.currentTurn);
+            setSymbolsMap(s.symbols || {});
+            setHeartsMap(s.hearts || {});
+            setTurnStart(s.turnStart || Date.now());
+
+            // Mettre à jour les coeurs dans l'UI des deux joueurs via symboles X/O
+            setPlayers(prev => {
+                const next = [...prev];
+                const xUserId = Object.keys(s.symbols || {}).find(uid => s.symbols[uid] === 'X');
+                const oUserId = Object.keys(s.symbols || {}).find(uid => s.symbols[uid] === 'O');
+                if (xUserId) next[0] = { ...next[0], chances: s.hearts?.[xUserId] ?? next[0].chances };
+                if (oUserId) next[1] = { ...next[1], chances: s.hearts?.[oUserId] ?? next[1].chances };
+                return next;
+            });
+
+            // Index du joueur courant pour l'UI locale (X=0, O=1)
+            setCurrentPlayerIndex(s.currentTurn === 'X' ? 0 : 1);
+        });
+
+        socket.on('ttt_gameover', (payload: { winner: { userId: string; symbol: 'X'|'O' } | 'Draw' }) => {
+            if (payload.winner === 'Draw') {
+                setWinner('Draw');
+                return;
+            }
+            const symbol = payload.winner.symbol;
+            const player = (symbol === 'X') ? players[0] : players[1];
+            setWinner(player);
+        });
+
+        return () => {
+            socket.disconnect();
+            socketRef.current = null;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [socketBase, roomCode]);
+
+    // Turn Timer Logic synchronisé (Choosing a cell)
     useEffect(() => {
         let timer: NodeJS.Timeout;
-        if (!isQuestionModalOpen && !winner && turnTimeRemaining > 0) {
-            timer = setInterval(() => {
-                setTurnTimeRemaining((prev) => {
-                    if (prev <= 1) {
-                        handleTurnTimeUp();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
+        timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - turnStart) / 1000);
+            const remain = Math.max(0, TURN_DURATION - elapsed);
+            setTurnTimeRemaining(remain);
+        }, 1000);
         return () => clearInterval(timer);
-    }, [isQuestionModalOpen, winner, turnTimeRemaining, currentPlayerIndex]);
+    }, [turnStart]);
 
     // Question Timer Logic (Answering)
     useEffect(() => {
@@ -143,17 +240,26 @@ export default function TicTacToeMultiplayerScreen({
     }, [isQuestionModalOpen, hasAnswered, questionTimeRemaining]);
 
     const handleTurnTimeUp = () => {
-        // Player ran out of time to choose a cell -> Lose a chance and switch turn
-        handleLoseChance(currentPlayerIndex);
+        // Timeout de tour: confier au serveur la pénalité et le changement de tour
+        try {
+            socketRef.current?.emit('ttt_turn_timeout', { gameCode: roomCode });
+        } catch {}
     };
 
     const handleQuestionTimeUp = () => {
         setHasAnswered(true);
         setIsCorrectAnswer(false);
-        // Player ran out of time to answer -> Lose a chance
-        handleLoseChance(currentPlayerIndex);
-
-        // Wait a bit to show the correct answer/explanation then close
+        // Notifier le serveur d'une mauvaise réponse (perte de coeur et changement de tour côté serveur)
+        if (selectedGridIndex !== null) {
+            try {
+                socketRef.current?.emit('tictactoe_answer', {
+                    gameCode: roomCode,
+                    userId: myUserId,
+                    index: selectedGridIndex,
+                    correct: false,
+                });
+            } catch {}
+        }
         setTimeout(closeQuestionModal, 4000);
     };
 
@@ -180,6 +286,8 @@ export default function TicTacToeMultiplayerScreen({
 
     const handleCellClick = (index: number) => {
         if (grid[index] || winner || isQuestionModalOpen) return;
+        // Tour strict: seul le joueur dont le symbole correspond au tour serveur peut jouer
+        if (!mySymbol || mySymbol !== serverTurn) return;
 
         // Select a random question
         const randomQuestion = quiz.questions[Math.floor(Math.random() * quiz.questions.length)];
@@ -199,24 +307,16 @@ export default function TicTacToeMultiplayerScreen({
         setHasAnswered(true);
         setIsCorrectAnswer(correct);
 
-        if (correct) {
-            // Place symbol on grid
-            if (selectedGridIndex !== null) {
-                const newGrid = [...grid];
-                newGrid[selectedGridIndex] = currentPlayer.symbol;
-                setGrid(newGrid);
-                checkWin(newGrid, currentPlayer);
-            }
-        } else {
-            // Wrong answer -> Lose a chance
-            const updatedPlayers = [...players];
-            updatedPlayers[currentPlayerIndex].chances -= 1;
-            setPlayers(updatedPlayers);
-            if (updatedPlayers[currentPlayerIndex].chances <= 0) {
-                // Game Over logic will be handled in closeQuestionModal or effect, 
-                // but let's set winner here to be safe if we want immediate feedback
-                // actually, let's wait for explanation to close
-            }
+        // Emettre la réponse au serveur qui arbitre et diffuse le nouvel état
+        if (selectedGridIndex !== null) {
+            try {
+                socketRef.current?.emit('tictactoe_answer', {
+                    gameCode: roomCode,
+                    userId: myUserId,
+                    index: selectedGridIndex,
+                    correct,
+                });
+            } catch {}
         }
 
         // Wait longer to read explanation
@@ -226,18 +326,7 @@ export default function TicTacToeMultiplayerScreen({
     const closeQuestionModal = () => {
         setIsQuestionModalOpen(false);
         setCurrentQuestion(null);
-
-        // Check for game over due to chances
-        const currentPlayer = players[currentPlayerIndex];
-        if (currentPlayer.chances <= 0) {
-            const otherPlayer = players[(currentPlayerIndex + 1) % players.length];
-            setWinner(otherPlayer);
-            return;
-        }
-
-        if (!winner) {
-            switchTurn();
-        }
+        // Le serveur gère le changement de tour et le game over
     };
 
     const checkWin = (currentGrid: GridCell[], player: Player) => {

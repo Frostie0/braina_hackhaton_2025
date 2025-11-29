@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { shuffle } from '@/lib/shuffle';
 import QuizScreen from '@/app/(pages)/quiz/QuizScreen';
 import FlashcardScreen from '@/app/(pages)/flashcard/flashcardScreen';
 import MultiplayerQuizScreen from './MultiplayerQuizScreen';
@@ -14,6 +15,7 @@ interface PlayConfig {
     questionsPerSession: number | 'all';
     shuffleQuestions: boolean;
     roomCode?: string;
+    isHost?: boolean;
     multiplayerConfig?: {
         questionsPerSession: number | 'all';
         maxPlayers: number;
@@ -163,7 +165,7 @@ const MOCK_QUIZ_DATA = {
                 memoryTip: "Labor = Travail en latin"
             },
             {
-                term: "Lotharingie",
+                term: "Lotharingi",
                 definition: "Royaume médian attribué à Lothaire lors du partage de l'empire carolingien, comprenant l'Italie, la Provence et la Bourgogne.",
                 memoryTip: "Lotharingie = Terre de Lothaire"
             }
@@ -171,20 +173,34 @@ const MOCK_QUIZ_DATA = {
     }
 };
 
-// Fonction de mélange Fisher-Yates (shuffle aléatoire fiable)
-const shuffleArray = <T,>(array: T[]): T[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+// Generate or retrieve user ID and name
+const getUserId = (): string => {
+    if (typeof window === 'undefined') return '';
+    let userId = localStorage.getItem('braina_user_id');
+    if (!userId) {
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('braina_user_id', userId);
     }
-    return shuffled;
+    return userId;
+};
+
+const getUserName = (): string => {
+    if (typeof window === 'undefined') return '';
+    let userName = localStorage.getItem('braina_user_name');
+    if (!userName) {
+        userName = `Joueur${Math.floor(Math.random() * 1000)}`;
+        localStorage.setItem('braina_user_name', userName);
+    }
+    return userName;
 };
 
 export default function PlayScreen({ config }: PlayScreenProps) {
     const router = useRouter();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [userId] = useState(getUserId);
+    const [userName] = useState(getUserName);
 
     useEffect(() => {
         // Simuler le chargement des données
@@ -205,7 +221,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
 
                     // Mélanger les questions AVANT de limiter si demandé
                     if (config.shuffleQuestions) {
-                        questions = shuffleArray(questions);
+                        questions = shuffle(questions);
                     }
 
                     // Limiter le nombre de questions selon la configuration
@@ -225,7 +241,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
 
                     // Mélanger les flashcards AVANT de limiter si demandé
                     if (config.shuffleQuestions) {
-                        flashcards = shuffleArray(flashcards);
+                        flashcards = shuffle(flashcards);
                     }
 
                     // Limiter le nombre de flashcards selon la configuration
@@ -288,11 +304,12 @@ export default function PlayScreen({ config }: PlayScreenProps) {
             return (
                 <TicTacToeMultiplayerScreen
                     quiz={data}
-                    roomCode={config.roomCode || 'DEMO123'}
-                    config={config.multiplayerConfig || {
-                        questionsPerSession: 10,
-                        maxPlayers: 2,
-                        timePerQuestion: 15
+                    roomCode={config.roomCode || ''}
+                    config={{
+                        questionsPerSession: config.questionsPerSession,
+                        maxPlayers: 5,
+                        timePerQuestion: 20,
+                        isHost: !!config.isHost,
                     }}
                 />
             );

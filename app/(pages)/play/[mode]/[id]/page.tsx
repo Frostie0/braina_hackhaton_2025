@@ -15,12 +15,14 @@ interface PageProps {
     searchParams: Promise<{
         questions?: string;
         shuffle?: string;
+        roomCode?: string;
+        isHost?: string;
     }>;
 }
 
 export default async function PlayPage({ params, searchParams }: PageProps) {
     const { mode, id } = await params;
-    const { questions, shuffle } = await searchParams;
+    const { questions, shuffle, roomCode, isHost } = await searchParams;
 
     // Validate mode
     const validModes = ['quiz', 'flashcards', 'exam', 'multiplayer'] as const;
@@ -32,7 +34,9 @@ export default async function PlayPage({ params, searchParams }: PageProps) {
         mode: mode as 'quiz' | 'flashcards' | 'exam' | 'multiplayer',
         quizId: id,
         questionsPerSession: questions ? parseInt(questions) : 10,
-        shuffleQuestions: shuffle === 'true'
+        shuffleQuestions: shuffle === 'true',
+        roomCode: roomCode,
+        isHost: isHost === 'true'
     };
 
     return <PlayScreen config={config} />;

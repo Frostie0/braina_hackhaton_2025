@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Clock, Trophy } from 'lucide-react';
+import { X, Clock, Trophy, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useGameRoom } from '@/hooks/useGameRoom';
 import LiveLeaderboard from '@/components/ui/LiveLeaderboard';
 
 interface Question {
-    id: string;
     type: string;
     question: string;
     options: string[];
@@ -15,56 +15,58 @@ interface Question {
     explanation: string;
 }
 
-interface QuizData {
-    title: string;
-    questions: Question[];
-}
-
 interface Player {
-    id: string;
-    name: string;
+    userId: string;
+    userName: string;
     score: number;
-    avatar: string;
-    timeBonus: number;
+    isHost: boolean;
+    isConnected: boolean;
+    answeredQuestions: Array<{
+        questionIndex: number;
+        answer: any;
+        isCorrect: boolean;
+        timeSpent: number;
+    }>;
 }
 
 interface MultiplayerQuizScreenProps {
-    quiz: QuizData;
     roomCode: string;
-    config: {
-        questionsPerSession: number | 'all';
-        maxPlayers: number;
-        timePerQuestion: number;
-    };
+    userId: string;
+    userName: string;
 }
 
 export default function MultiplayerQuizScreen({
-    quiz,
     roomCode,
-    config
+    userId,
+    userName
 }: MultiplayerQuizScreenProps) {
     const router = useRouter();
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const { gameRoom, submitAnswer, nextQuestion, currentPlayer, isHost } = useGameRoom(userId, userName);
+
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
     const [hasAnswered, setHasAnswered] = useState(false);
-    const [timeRemaining, setTimeRemaining] = useState(config.timePerQuestion);
+    const [timeRemaining, setTimeRemaining] = useState(15);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
-    const [myScore, setMyScore] = useState(0);
-    const [myPosition, setMyPosition] = useState(1);
+    const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
-    // Mock players data (replace with real multiplayer state)
-    const [players, setPlayers] = useState<Player[]>([
-        { id: '1', name: 'Vous', score: 0, avatar: '#3B82F6', timeBonus: 0 },
-        { id: '2', name: 'Shadow', score: 0, avatar: '#8B5CF6', timeBonus: 0 },
-        { id: '3', name: 'Phoenix', score: 0, avatar: '#F59E0B', timeBonus: 0 }
-    ]);
+    const currentQuestion = gameRoom?.questions[gameRoom.currentQuestionIndex];
+    const progress = gameRoom ? ((gameRoom.currentQuestionIndex + 1) / gameRoom.questions.length) * 100 : 0;
+    const timePerQuestion = gameRoom?.settings.timePerQuestion || 15;
 
-    const currentQuestion = quiz.questions[currentQuestionIndex];
-    const progress = ((currentQuestionIndex + 1) / quiz.questions.length) * 100;
+    // Reset state when question changes
+    useEffect(() => {
+        if (gameRoom) {
+            setSelectedOption(null);
+            setHasAnswered(false);
+            setTimeRemaining(timePerQuestion);
+            setShowLeaderboard(false);
+            setQuestionStartTime(Date.now());
+        }
+    }, [gameRoom?.currentQuestionIndex, timePerQuestion]);
 
     // Timer countdown
     useEffect(() => {
-        if (hasAnswered || showLeaderboard) return;
+        if (!gameRoom || hasAnswered || showLeaderboard || gameRoom.gameState !== 'playing') return;
 
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
@@ -77,14 +79,28 @@ export default function MultiplayerQuizScreen({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [hasAnswered, showLeaderboard, currentQuestionIndex]);
+    }, [hasAnswered, showLeaderboard, gameRoom?.gameState, gameRoom?.currentQuestionIndex]);
 
-    const calculateScore = (isCorrect: boolean, timeLeft: number): number => {
-        if (!isCorrect) return 0;
-        const basePoints = 100;
-        const timeBonus = Math.floor((timeLeft / config.timePerQuestion) * 50);
-        return basePoints + timeBonus;
-    };
+    // Check if all players have answered
+    useEffect(() => {
+        if (!gameRoom || !hasAnswered) return;
+
+        const connectedPlayers = gameRoom.players.filter(p => p.isConnected);
+        const allAnswered = connectedPlayers.every(p =>
+            p.answeredQuestions.some(aq => aq.questionIndex === gameRoom.currentQuestionIndex)
+        );
+
+        if (allAnswered) {
+            setShowLeaderboard(true);
+        }
+    }, [gameRoom?.players, hasAnswered, gameRoom?.currentQuestionIndex]);
+
+    // Navigate to results when game ends
+    useEffect(() => {
+        if (gameRoom?.gameState === 'ended') {
+            router.push(`/play/multiplayer/results/${roomCode}`);
+        }
+    }, [gameRoom?.gameState, roomCode, router]);
 
     const handleOptionSelect = (option: string) => {
         if (!hasAnswered) {
@@ -92,53 +108,62 @@ export default function MultiplayerQuizScreen({
         }
     };
 
-    const handleSubmit = () => {
-        if (hasAnswered) return;
+    const handleSubmit = useCallback(() => {
+        if (hasAnswered || !selectedOption || !gameRoom) return;
 
-        const isCorrect = selectedOption === currentQuestion.correctAnswer;
-        const earnedPoints = calculateScore(isCorrect, timeRemaining);
-
+        const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
         setHasAnswered(true);
-        setMyScore(myScore + earnedPoints);
-
-        // Update players scores (mock - replace with real multiplayer logic)
-        setPlayers(prevPlayers => {
-            const updated = prevPlayers.map(p => {
-                if (p.id === '1') {
-                    return { ...p, score: p.score + earnedPoints, timeBonus: timeRemaining };
-                }
-                // Simulate other players' scores
-                const randomScore = Math.random() > 0.5 ? Math.floor(Math.random() * 150) : 0;
-                return { ...p, score: p.score + randomScore };
-            }).sort((a, b) => b.score - a.score);
-
-            // Update position
-            const position = updated.findIndex(p => p.id === '1') + 1;
-            setMyPosition(position);
-
-            return updated;
-        });
+        submitAnswer(selectedOption, timeSpent);
 
         // Show leaderboard after a brief moment
         setTimeout(() => {
             setShowLeaderboard(true);
         }, 1500);
-    };
+    }, [hasAnswered, selectedOption, gameRoom, questionStartTime, submitAnswer]);
 
     const handleNext = () => {
-        if (currentQuestionIndex < quiz.questions.length - 1) {
-            setCurrentQuestionIndex(currentQuestionIndex + 1);
-            setSelectedOption(null);
-            setHasAnswered(false);
-            setTimeRemaining(config.timePerQuestion);
-            setShowLeaderboard(false);
+        if (!gameRoom || !isHost) return;
+
+        if (gameRoom.currentQuestionIndex < gameRoom.questions.length - 1) {
+            nextQuestion();
         } else {
-            // Game ended - navigate to results
-            router.push(`/play/multiplayer/results/${roomCode}`);
+            nextQuestion(); // This will trigger game end on backend
         }
     };
 
+    if (!gameRoom || !currentQuestion) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-400 text-sm">Chargement du jeu...</p>
+                </div>
+            </div>
+        );
+    }
+
     const isCorrect = selectedOption === currentQuestion.correctAnswer;
+    const myPosition = gameRoom.players
+        .filter(p => p.isConnected)
+        .sort((a, b) => b.score - a.score)
+        .findIndex(p => p.userId === userId) + 1;
+
+    // Convert players to LiveLeaderboard format
+    const leaderboardPlayers = gameRoom.players
+        .filter(p => p.isConnected)
+        .map(p => ({
+            id: p.userId,
+            name: p.userName,
+            score: p.score,
+            avatar: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+            timeBonus: 0
+        }));
+
+    // Count players who have answered current question
+    const playersAnswered = gameRoom.players.filter(p =>
+        p.isConnected && p.answeredQuestions.some(aq => aq.questionIndex === gameRoom.currentQuestionIndex)
+    ).length;
+    const totalPlayers = gameRoom.players.filter(p => p.isConnected).length;
 
     return (
         <div className="min-h-screen bg-black flex flex-col p-4">
@@ -154,7 +179,11 @@ export default function MultiplayerQuizScreen({
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
                         <Trophy className="w-5 h-5 text-white" />
-                        <span className="text-white font-medium">#{myPosition}/{players.length}</span>
+                        <span className="text-white font-medium">#{myPosition}/{totalPlayers}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                        <Users className="w-5 h-5 text-white" />
+                        <span className="text-white font-medium">{playersAnswered}/{totalPlayers}</span>
                     </div>
                 </div>
                 <button
@@ -176,7 +205,7 @@ export default function MultiplayerQuizScreen({
                     />
                 </div>
                 <p className="text-gray-400 text-sm mt-2 text-center">
-                    Question {currentQuestionIndex + 1} sur {quiz.questions.length}
+                    Question {gameRoom.currentQuestionIndex + 1} sur {gameRoom.questions.length}
                 </p>
             </div>
 
@@ -185,7 +214,7 @@ export default function MultiplayerQuizScreen({
                 <AnimatePresence mode="wait">
                     {!showLeaderboard ? (
                         <motion.div
-                            key={`question-${currentQuestionIndex}`}
+                            key={`question-${gameRoom.currentQuestionIndex}`}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
@@ -214,12 +243,12 @@ export default function MultiplayerQuizScreen({
                                             whileHover={!hasAnswered ? { scale: 1.02 } : {}}
                                             whileTap={!hasAnswered ? { scale: 0.98 } : {}}
                                             className={`p-5 rounded-xl border-2 text-left transition-all ${showCorrect
-                                                    ? 'bg-green-500/10 border-green-500/50'
-                                                    : showIncorrect
-                                                        ? 'bg-red-500/10 border-red-500/50'
-                                                        : isSelected
-                                                            ? 'bg-white/20 border-white/50'
-                                                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                                                ? 'bg-green-500/10 border-green-500/50'
+                                                : showIncorrect
+                                                    ? 'bg-red-500/10 border-red-500/50'
+                                                    : isSelected
+                                                        ? 'bg-white/20 border-white/50'
+                                                        : 'bg-white/5 border-white/10 hover:bg-white/10'
                                                 } ${hasAnswered ? 'cursor-default' : 'cursor-pointer'}`}
                                         >
                                             <span className={`font-medium ${showCorrect ? 'text-green-400' : showIncorrect ? 'text-red-400' : 'text-white'
@@ -263,18 +292,25 @@ export default function MultiplayerQuizScreen({
                             exit={{ opacity: 0, scale: 0.95 }}
                         >
                             <LiveLeaderboard
-                                players={players}
-                                currentUserId="1"
+                                players={leaderboardPlayers}
+                                currentUserId={userId}
                                 variant="mini"
                             />
-                            <motion.button
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={handleNext}
-                                className="w-full max-w-sm mx-auto block mt-6 py-4 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
-                            >
-                                {currentQuestionIndex < quiz.questions.length - 1 ? 'Question suivante' : 'Voir les résultats'}
-                            </motion.button>
+                            {isHost && (
+                                <motion.button
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    onClick={handleNext}
+                                    className="w-full max-w-sm mx-auto block mt-6 py-4 bg-white hover:bg-gray-200 text-black font-bold rounded-xl transition-colors"
+                                >
+                                    {gameRoom.currentQuestionIndex < gameRoom.questions.length - 1 ? 'Question suivante' : 'Voir les résultats'}
+                                </motion.button>
+                            )}
+                            {!isHost && (
+                                <p className="text-center text-gray-400 text-sm mt-6">
+                                    En attente que l'hôte passe à la question suivante...
+                                </p>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>
