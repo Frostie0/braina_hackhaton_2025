@@ -103,6 +103,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
   useEffect(() => {
     const loadData = async () => {
       try {
+
         const response = await axios.get(
           `${serverIp}/quiz/getQuiz/${config.quizId}`
         );
@@ -235,7 +236,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
       if (!data || !("questions" in data)) {
         return null;
       }
-      return <QuizScreen quiz={data} />;
+      return <QuizScreen quiz={data} quizId={config.quizId} />;
     case "flashcards":
       if (!data || !("flashcards" in data)) {
         return null;
@@ -253,6 +254,7 @@ export default function PlayScreen({ config }: PlayScreenProps) {
       return (
         <TicTacToeMultiplayerScreen
           quiz={data}
+          quizId={config.quizId}
           roomCode={config.roomCode || ""}
           config={{
             questionsPerSession: config.questionsPerSession,
@@ -266,6 +268,6 @@ export default function PlayScreen({ config }: PlayScreenProps) {
       if (!data || !("questions" in data)) {
         return null;
       }
-      return <QuizScreen quiz={data} />;
+      return <QuizScreen quiz={data} quizId={config.quizId} />;
   }
 }

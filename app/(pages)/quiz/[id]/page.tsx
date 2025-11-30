@@ -14,6 +14,7 @@ import GamePreferencesModal, { GamePreferences } from '@/components/ui/GamePrefe
 import MultiplayerConfigModal from '@/components/ui/MultiplayerConfigModal';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getUserId } from '@/lib/storage/userStorage';
 
 // Types pour les données du backend
 interface BackendQuiz {
@@ -151,6 +152,7 @@ export default function QuizDetailsPage() {
 
             const res = await axios.post(`${serverIp}/game/create`, {
                 hostId: 'host-temp',
+                quizId: id,
                 settings,
                 questions: payloadQuestions
             });
@@ -242,11 +244,20 @@ export default function QuizDetailsPage() {
         return `il y a ${months} mois`;
     })();
 
-    // Nombre de joueurs
-    const playedCount = quiz.players.length;
+    // Nombre de joueurs (ou plutôt nombre de fois joué par tout le monde si on suit le modèle, mais ici on veut le nombre de fois joué par l'utilisateur courant pour la maitrise)
+    // Le modèle a `players` qui est un tableau d'objets {id, played, correctAnswers}
 
-    // Calcul du pourcentage de maîtrise (stub - à implémenter selon votre logique)
-    const masteryPercentage = 0; // TODO: Calculer selon l'historique du joueur
+    const currentUserId = getUserId();
+    const currentPlayer = quiz.players.find((p: any) => p.id === currentUserId);
+    const playedCount = currentPlayer?.played || 0;
+
+    // Calcul du pourcentage de maîtrise
+    const questionCount = quiz.questions.length;
+    let masteryPercentage = 0;
+    if (questionCount > 0) {
+        const targetPlays = Math.round(Math.sqrt(questionCount * 10));
+        masteryPercentage = Math.min(100, Math.round((playedCount / targetPlays) * 100));
+    }
 
     return (
         <div className="min-h-screen bg-black text-white flex justify-center p-4 lg:p-8">

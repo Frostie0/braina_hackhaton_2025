@@ -44,7 +44,7 @@ interface BackendQuiz {
 /**
  * Adapter pour convertir un quiz du backend vers le format frontend
  */
-const adaptBackendQuizToFrontend = (backendQuiz: BackendQuiz): FrontendQuiz => {
+const adaptBackendQuizToFrontend = (backendQuiz: BackendQuiz, userId: string): FrontendQuiz => {
     // Formater la date au format "DD MMM YYYY"
     const date = new Date(backendQuiz.createdAt);
     const formattedDate = date.toLocaleDateString('fr-FR', {
@@ -81,8 +81,16 @@ const adaptBackendQuizToFrontend = (backendQuiz: BackendQuiz): FrontendQuiz => {
         }
     }
 
-    // Calculer le pourcentage de maîtrise (stub - à implémenter selon votre logique)
-    const masteryPercentage = 0;
+    // Calcul du pourcentage de maîtrise
+    const questionCount = backendQuiz.questions.length;
+    const player = backendQuiz.players?.find((p: any) => p.id === userId);
+    const playedCount = player?.played || 0;
+
+    let masteryPercentage = 0;
+    if (questionCount > 0) {
+        const targetPlays = Math.round(Math.sqrt(questionCount * 10));
+        masteryPercentage = Math.min(100, Math.round((playedCount / targetPlays) * 100));
+    }
 
     return {
         id: backendQuiz.quizId,
@@ -136,7 +144,7 @@ export default function DashboardClient() {
             if (response.status === 200) {
                 // Convertir les quiz du backend au format frontend
                 const adaptedQuizzes = response.data.quizs.map((quiz: BackendQuiz) =>
-                    adaptBackendQuizToFrontend(quiz)
+                    adaptBackendQuizToFrontend(quiz, userId)
                 );
                 setQuizzes(adaptedQuizzes);
                 console.log('✅ Quiz récupérés:', response.data.count, 'quiz trouvés');

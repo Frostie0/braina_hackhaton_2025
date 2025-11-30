@@ -71,9 +71,9 @@ export default function WaitingRoom({
                                 <Share2 className="w-4 h-4" />
                                 {showCopied ? 'Copié !' : 'Partager'}
                             </button>
-                            <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 transition">
+                            {/* <button className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 transition">
                                 <MoreVertical className="w-5 h-5" />
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>
@@ -132,8 +132,8 @@ export default function WaitingRoom({
                             onClick={onStartGame}
                             disabled={currentPlayers.length < 2}
                             className={`w-full py-4 rounded-xl font-bold text-lg transition ${currentPlayers.length >= 2
-                                    ? 'bg-white hover:bg-gray-200 text-black'
-                                    : 'bg-white/10 text-gray-500 cursor-not-allowed'
+                                ? 'bg-white hover:bg-gray-200 text-black'
+                                : 'bg-white/10 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             Commencer la partie

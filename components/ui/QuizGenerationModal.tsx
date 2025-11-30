@@ -14,16 +14,16 @@ interface QuizGenerationModalProps {
 
 // Conseils aléatoires pour afficher pendant la génération
 const tips = [
-    "💡 Les quiz interactifs améliorent la rétention de 60% !",
-    "🎯 La répétition espacée est la clé de la mémorisation à long terme",
-    "🧠 Testez-vous régulièrement pour mieux ancrer vos connaissances",
-    "⚡ Les flashcards numériques sont 2x plus efficaces que le papier",
-    "🌟 Variez les formats de questions pour un apprentissage optimal",
-    "📚 Révisez dans des environnements différents pour mieux retenir",
-    "🎨 Les quiz visuels stimulent davantage votre mémoire",
-    "🔄 Alternez entre quiz et flashcards pour de meilleurs résultats",
-    "💪 Commencez facile puis augmentez la difficulté progressivement",
-    "🎓 20 minutes de quiz quotidien = 80% de rétention en plus",
+    "Les quiz interactifs améliorent la rétention de 60% !",
+    "La répétition espacée est la clé de la mémorisation à long terme",
+    "Testez-vous régulièrement pour mieux ancrer vos connaissances",
+    "Les flashcards numériques sont 2x plus efficaces que le papier",
+    "Variez les formats de questions pour un apprentissage optimal",
+    "Révisez dans des environnements différents pour mieux retenir",
+    "Les quiz visuels stimulent davantage votre mémoire",
+    "Alternez entre quiz et flashcards pour de meilleurs résultats",
+    "Commencez facile puis augmentez la difficulté progressivement",
+    "20 minutes de quiz quotidien = 80% de rétention en plus",
 ];
 
 export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
@@ -61,9 +61,9 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
             case 'generating':
                 return 'Génération du quiz et des flashcards...';
             case 'success':
-                return '✨ Quiz créé avec succès !';
+                return 'Quiz créé avec succès !';
             case 'error':
-                return '❌ Une erreur est survenue';
+                return 'Une erreur est survenue';
             default:
                 return 'Préparation...';
         }
@@ -142,9 +142,9 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                         {(status === 'extracting' || status === 'analyzing' || status === 'generating') && (
                             <div className="grid grid-cols-3 gap-3 mb-6">
                                 {[
-                                    { key: 'extracting', label: 'Extraction', icon: '📄' },
-                                    { key: 'analyzing', label: 'Analyse', icon: '🧠' },
-                                    { key: 'generating', label: 'Génération', icon: '✨' },
+                                    { key: 'extracting', label: 'Extraction', icon: '' },
+                                    { key: 'analyzing', label: 'Analyse', icon: '' },
+                                    { key: 'generating', label: 'Génération', icon: '' },
                                 ].map((step, index) => {
                                     const isActive = status === step.key;
                                     const isCompleted =
@@ -155,13 +155,13 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                                         <div
                                             key={step.key}
                                             className={`p-3 rounded-lg border transition-all duration-300 ${isActive
-                                                    ? 'bg-purple-500/20 border-purple-500 scale-105'
-                                                    : isCompleted
-                                                        ? 'bg-green-500/20 border-green-500'
-                                                        : 'bg-gray-800 border-gray-700'
+                                                ? 'bg-purple-500/20 border-purple-500 scale-105'
+                                                : isCompleted
+                                                    ? 'bg-green-500/20 border-green-500'
+                                                    : 'bg-gray-800 border-gray-700'
                                                 }`}
                                         >
-                                            <div className="text-2xl text-center mb-1">{step.icon}</div>
+                                            {/* <div className="text-2xl text-center mb-1">{step.icon}</div> */}
                                             <p className={`text-xs text-center font-medium ${isActive ? 'text-purple-400' : isCompleted ? 'text-green-400' : 'text-gray-500'
                                                 }`}>
                                                 {step.label}
@@ -195,8 +195,8 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                                 transition={{ delay: 0.5 }}
                                 onClick={onClose}
                                 className={`w-full mt-6 py-3 rounded-lg font-semibold transition-all duration-200 ${status === 'success'
-                                        ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white'
-                                        : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white'
+                                    ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white'
+                                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white'
                                     }`}
                             >
                                 {status === 'success' ? 'Voir le quiz' : 'Réessayer'}

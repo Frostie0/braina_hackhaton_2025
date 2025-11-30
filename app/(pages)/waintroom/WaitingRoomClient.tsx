@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Users, Copy, Check, PlayCircle, LogOut, Link2 } from "lucide-react";
 import { serverIp } from "@/lib/serverIp";
 import { io, Socket } from "socket.io-client";
+import axios from "axios";
 
 type SocketGamePlayer = {
   userId: string;
@@ -34,13 +35,15 @@ export default function WaitingRoomClient() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const quizId = params.get("id") || "";
+  const initialQuizId = params.get("id") || "";
   const room = params.get("room") || "";
-  const maxPlayers = Number(params.get("maxPlayers") || 5);
+  const maxPlayers = Number(params.get("maxPlayers") || 2);
   const questions = Number(params.get("questions") || 10);
   const isHost = params.get("isHost") === "true";
 
   const [copied, setCopied] = useState(false);
+  const [quizId, setQuizId] = useState(initialQuizId);
+  const quizIdRef = useRef(initialQuizId);
   const [players, setPlayers] = useState<Array<{ id: string; name: string }>>(
     []
   );
@@ -52,11 +55,56 @@ export default function WaitingRoomClient() {
 
   const socketBase = useMemo(() => getServerBaseUrl(serverIp), []);
 
+  // Helpers identités persistantes (alignées avec l'écran de jeu)
+  const getUserId = (): string => {
+    if (typeof window === "undefined") return "";
+    let userId = localStorage.getItem("braina_user_id");
+    if (!userId) {
+      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+      localStorage.setItem("braina_user_id", userId);
+    }
+    return userId;
+  };
+  const getUserName = (): string => {
+    if (typeof window === "undefined") return "";
+    let userName = localStorage.getItem("braina_user_name");
+    if (!userName) {
+      userName = `Joueur${Math.floor(Math.random() * 1000)}`;
+      localStorage.setItem("braina_user_name", userName);
+    }
+    return userName;
+  };
+
+  // Fetch quizId from game room if missing
+  useEffect(() => {
+    const fetchQuizId = async () => {
+      if (!quizId && room) {
+        try {
+          const response = await axios.get(`${serverIp}/game/${room}`);
+          const gameQuizId = response.data?.quizId;
+          if (gameQuizId) {
+            setQuizId(gameQuizId);
+            quizIdRef.current = gameQuizId;
+          }
+        } catch (error) {
+          console.error("Failed to fetch quizId from game room:", error);
+        }
+      }
+    };
+    fetchQuizId();
+  }, [room, quizId]);
+
+  // Update ref when quizId changes
+  useEffect(() => {
+    quizIdRef.current = quizId;
+  }, [quizId]);
+
   useEffect(() => {
     if (!room) return;
 
+    console.log("🔗 Socket base:", socketBase);
     const socket = io(socketBase, {
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 5,
     });
@@ -64,10 +112,25 @@ export default function WaitingRoomClient() {
 
     socket.on("connect", () => {
       setStatus("connected");
-      // Identité simple (à adapter selon votre auth)
-      const userId = isHost ? "host-temp" : `guest-${socket.id?.slice(-4)}`;
-      const userName = isHost ? "Hôte" : `Joueur-${socket.id?.slice(-4)}`;
+      // Identité persistante
+      const userId = getUserId();
+      const userName = getUserName();
       socket.emit("join_game", { gameCode: room, userId, userName, isHost });
+      // Demander l'état courant (players, state)
+      socket.emit("request_state", { gameCode: room });
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connect_error:", err);
+      setStatus("error");
+    });
+    socket.on("error", (err) => {
+      console.error("Socket error:", err);
+      setStatus("error");
+    });
+    socket.on("disconnect", (reason) => {
+      console.warn("Socket disconnected:", reason);
+      setStatus("closed");
     });
 
     socket.on(
@@ -81,23 +144,49 @@ export default function WaitingRoomClient() {
       }
     );
 
-    socket.on("game_state", (game: SocketGameState) => {
+    socket.on("game_state", (game: SocketGameState & { gameState?: string }) => {
       const mapped = (game?.players || [])
         .filter((p) => p.isConnected)
         .map((p) => ({ id: p.userId, name: p.userName }));
       setPlayers(mapped);
+      // Fallback navigation: si l'état passe à 'playing', naviguer tous ensemble
+      if (game?.gameState === "playing") {
+        const currentQuizId = quizIdRef.current;
+        if (currentQuizId) {
+          const query = new URLSearchParams({
+            questions: String(questions),
+            shuffle: "true",
+            roomCode: room,
+            isHost: String(isHost),
+          }).toString();
+          router.push(`/play/multiplayer/${currentQuizId}?${query}`);
+        }
+      }
     });
 
     socket.on("game_started", () => {
-      handleStart();
+      // Navigation pour TOUS les clients (hôte et invités) au même moment
+      const currentQuizId = quizIdRef.current;
+      if (!currentQuizId) {
+        console.error("Cannot start game: quizId is missing");
+        return;
+      }
+      const query = new URLSearchParams({
+        questions: String(questions),
+        shuffle: "true",
+        roomCode: room,
+        isHost: String(isHost),
+      }).toString();
+      router.push(`/play/multiplayer/${currentQuizId}?${query}`);
     });
 
     socket.on("disconnect", () => setStatus("closed"));
     socket.on("connect_error", () => setStatus("error"));
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      // Ne pas forcer la déconnexion pour conserver la session lors de la navigation
+      // socket.disconnect();
+      // socketRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketBase, room, isHost]);
@@ -107,7 +196,7 @@ export default function WaitingRoomClient() {
       await navigator.clipboard.writeText(room);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {}
+    } catch { }
   };
 
   const handleShareLink = async () => {
@@ -119,7 +208,7 @@ export default function WaitingRoomClient() {
     if (navigator.share) {
       try {
         await navigator.share({ title: "Rejoindre la salle", url: joinUrl });
-      } catch {}
+      } catch { }
     } else {
       await navigator.clipboard.writeText(joinUrl);
       setCopied(true);
@@ -128,21 +217,24 @@ export default function WaitingRoomClient() {
   };
 
   const handleStart = () => {
-    const effectiveQuizId = quizId || room; // fallback si l'invité n'a pas l'id
+    if (!quizId) {
+      console.error("Cannot start game: quizId is missing");
+      return;
+    }
     const query = new URLSearchParams({
       questions: String(questions),
       shuffle: "true",
       roomCode: room,
       isHost: String(isHost),
     }).toString();
-    router.push(`/play/multiplayer/${effectiveQuizId}?${query}`);
+    router.push(`/play/multiplayer/${quizId}?${query}`);
   };
 
   const handleLeave = () => {
     try {
       const userId = "host-temp";
       socketRef.current?.emit("leave_game", { gameCode: room, userId });
-    } catch {}
+    } catch { }
     router.back();
   };
 
@@ -168,8 +260,8 @@ export default function WaitingRoomClient() {
                     status === "connected"
                       ? "text-emerald-400"
                       : status === "error"
-                      ? "text-red-400"
-                      : "text-yellow-400"
+                        ? "text-red-400"
+                        : "text-yellow-400"
                   }
                 >
                   {status}
@@ -206,12 +298,12 @@ export default function WaitingRoomClient() {
               <div className="text-3xl font-semibold tracking-widest text-center py-4 select-all">
                 {room}
               </div>
-              <button
+              {/* <button
                 onClick={handleShareLink}
                 className="w-full mt-3 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white text-black hover:bg-gray-200"
               >
                 <Link2 className="w-4 h-4" /> Partager le lien d&apos;invitation
-              </button>
+              </button> */}
               <div className="mt-3 text-sm text-gray-400 text-center">
                 Max joueurs: {maxPlayers}
               </div>
@@ -248,10 +340,26 @@ export default function WaitingRoomClient() {
                 <button
                   onClick={() => {
                     try {
+                      const connected = !!socketRef.current?.connected;
+                      console.log("▶️ Start button clicked", { connected, room, quizId: quizIdRef.current });
                       socketRef.current?.emit("start_game", { gameCode: room });
-                    } catch {}
+                      // Fallback: si aucun event 'game_started' ne vient dans 1200ms, on navigue quand même côté hôte
+                      const currentQuizId = quizIdRef.current;
+                      if (currentQuizId) {
+                        setTimeout(() => {
+                          // Si on est encore sur la waiting room, on force la navigation
+                          const query = new URLSearchParams({
+                            questions: String(questions),
+                            shuffle: "true",
+                            roomCode: room,
+                            isHost: String(isHost),
+                          }).toString();
+                          router.push(`/play/multiplayer/${currentQuizId}?${query}`);
+                        }, 1200);
+                      }
+                    } catch { }
                   }}
-                  className="w-full mt-6 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-black hover:bg-gray-200 font-medium"
+                  className={`w-full mt-6 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition bg-white text-black hover:bg-gray-200`}
                 >
                   <PlayCircle className="w-5 h-5" /> Démarrer la partie
                 </button>

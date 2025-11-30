@@ -1,5 +1,6 @@
 import React from 'react';
 import { Zap } from 'lucide-react';
+import { colors } from '@/lib/colors';
 
 interface QuickStartCardProps {
   icon: React.ElementType;
@@ -20,7 +21,10 @@ export const QuickStartCard: React.FC<QuickStartCardProps> = ({ icon: Icon, titl
       </div>
     )}
 
-    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-5 transition-colors ${comingSoon ? 'bg-white/5 text-gray-500' : 'bg-white/10 text-white group-hover:bg-white/20'}`}>
+    <div
+      className={`w-10 h-10 rounded-lg flex items-center justify-center mb-5 transition-colors ${comingSoon ? 'bg-white/5 text-gray-500' : 'text-white'}`}
+      style={{ backgroundColor: comingSoon ? undefined : colors.accent }}
+    >
       <Icon className="w-5 h-5" />
     </div>
 

@@ -24,7 +24,7 @@ export default function MultiplayerConfigModal({
     totalQuestions
 }: MultiplayerConfigModalProps) {
     const [questionsPerSession, setQuestionsPerSession] = useState<number | 'all'>('all');
-    const [maxPlayers, setMaxPlayers] = useState(5);
+    const [maxPlayers, setMaxPlayers] = useState(2);
     const [timePerQuestion, setTimePerQuestion] = useState(15);
 
     const handleCreateRoom = () => {
@@ -106,7 +106,7 @@ export default function MultiplayerConfigModal({
                         </div>
 
                         {/* Max players */}
-                        <div>
+                        {/* <div>
                             <h4 className="text-white font-medium mb-3">Nombre max de joueurs</h4>
                             <div className="flex items-center gap-4">
                                 <button
@@ -126,6 +126,7 @@ export default function MultiplayerConfigModal({
                                 </button>
                             </div>
                         </div>
+                         */}
 
                         {/* Time per question */}
                         <div>

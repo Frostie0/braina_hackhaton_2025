@@ -5,6 +5,9 @@ import { X, Check, X as XIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { colors } from "@/lib/colors";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { serverIp } from "@/lib/serverIp";
+import { getUserId } from "@/lib/storage/userStorage";
 
 interface QuizData {
   title: string;
@@ -18,7 +21,7 @@ interface QuizData {
   }>;
 }
 
-export default function QuizScreen({ quiz }: { quiz: QuizData }) {
+export default function QuizScreen({ quiz, quizId }: { quiz: QuizData; quizId: string }) {
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -77,6 +80,26 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
   };
 
   const isCorrect = selectedOption === currentQuestion.correctAnswer;
+
+  React.useEffect(() => {
+    const incrementPlayCount = async () => {
+      if (showResult) {
+        try {
+          const userId = getUserId();
+          if (userId) {
+            await axios.post(`${serverIp}/quiz/incrementPlayed`, {
+              quizId: quizId,
+              userId: userId,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to increment play count:", error);
+        }
+      }
+    };
+
+    incrementPlayCount();
+  }, [showResult, quizId]);
 
   if (showResult) {
     const percentage = Math.round((score / quiz.questions.length) * 100);
@@ -154,8 +177,8 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                 {percentage >= 80
                   ? "Excellent travail !"
                   : percentage >= 50
-                  ? "Bien joué !"
-                  : "Continuez vos efforts !"}
+                    ? "Bien joué !"
+                    : "Continuez vos efforts !"}
               </h2>
               <p style={{ color: colors.grayText }}>
                 Vous avez obtenu {score} sur {quiz.questions.length} bonnes
@@ -456,9 +479,8 @@ export default function QuizScreen({ quiz }: { quiz: QuizData }) {
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform active:scale-[0.98] text-white shadow-lg`}
                 style={{
                   backgroundColor: isCorrect ? colors.green : colors.red,
-                  boxShadow: `0 10px 15px -3px ${
-                    isCorrect ? colors.green : colors.red
-                  }33`,
+                  boxShadow: `0 10px 15px -3px ${isCorrect ? colors.green : colors.red
+                    }33`,
                 }}
               >
                 {currentQuestionIndex < quiz.questions.length - 1

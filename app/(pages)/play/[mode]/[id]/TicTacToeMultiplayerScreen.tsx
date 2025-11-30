@@ -15,6 +15,7 @@ import {
   HeartCrack,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { io, Socket } from "socket.io-client";
 import { serverIp } from "@/lib/serverIp";
 
@@ -41,11 +42,11 @@ interface Player {
   color: string;
   borderColor: string;
   bgColor: string;
-  chances: number; // Added chances
 }
 
 interface TicTacToeMultiplayerScreenProps {
   quiz: QuizData;
+  quizId: string;
   roomCode: string;
   config: {
     questionsPerSession: number | "all";
@@ -58,7 +59,7 @@ interface TicTacToeMultiplayerScreenProps {
 type GridCell = "X" | "O" | null;
 
 const TURN_DURATION = 15; // Seconds to choose a cell
-const MAX_CHANCES = 5; // Maximum chances per player
+
 
 // Colors from lib/colors.js
 const THEME = {
@@ -73,6 +74,7 @@ const THEME = {
 
 export default function TicTacToeMultiplayerScreen({
   quiz,
+  quizId,
   roomCode,
   config,
 }: TicTacToeMultiplayerScreenProps) {
@@ -108,7 +110,7 @@ export default function TicTacToeMultiplayerScreen({
       color: "text-blue-400",
       borderColor: "border-blue-500/50",
       bgColor: "bg-blue-500/10",
-      chances: MAX_CHANCES,
+
     },
     {
       id: "2",
@@ -119,7 +121,7 @@ export default function TicTacToeMultiplayerScreen({
       color: "text-red-400",
       borderColor: "border-red-500/50",
       bgColor: "bg-red-500/10",
-      chances: MAX_CHANCES,
+
     },
   ]);
 
@@ -129,6 +131,7 @@ export default function TicTacToeMultiplayerScreen({
   const [serverTurn, setServerTurn] = useState<"X" | "O">("X");
   const [symbolsMap, setSymbolsMap] = useState<Record<string, "X" | "O">>({});
   const [turnStart, setTurnStart] = useState<number>(Date.now());
+  const [serverTurnDuration, setServerTurnDuration] = useState<number>(TURN_DURATION);
   const [myUserId] = useState(() => {
     if (typeof window === "undefined") return "";
     let userId = localStorage.getItem("braina_user_id");
@@ -138,13 +141,63 @@ export default function TicTacToeMultiplayerScreen({
     }
     return userId;
   });
-  const mySymbol = useMemo(
-    () => symbolsMap[myUserId] as "X" | "O" | undefined,
-    [symbolsMap, myUserId]
-  );
+  const [mySocketId, setMySocketId] = useState<string>("");
+  const mySymbol = useMemo(() => {
+    const byUser = symbolsMap[myUserId] as "X" | "O" | undefined;
+    if (byUser) return byUser;
+    if (mySocketId) {
+      return symbolsMap[mySocketId] as "X" | "O" | undefined;
+    }
+    return undefined;
+  }, [symbolsMap, myUserId, mySocketId]);
 
   // Socket.IO
   const socketRef = useRef<Socket | null>(null);
+  // Audio
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const ensureAudio = () => {
+    if (!audioCtxRef.current) {
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        audioCtxRef.current = new AudioContextClass();
+      } catch { }
+    }
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
+
+  // Resume audio on first interaction
+  useEffect(() => {
+    const resumeAudio = () => {
+      if (audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+    };
+    window.addEventListener('click', resumeAudio);
+    window.addEventListener('keydown', resumeAudio);
+    return () => {
+      window.removeEventListener('click', resumeAudio);
+      window.removeEventListener('keydown', resumeAudio);
+    };
+  }, []);
+  const playBeep = (freq = 440, durationMs = 120, type: OscillatorType = "sine", volume = 0.2) => {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    console.log("🔊 Playing beep:", { freq, durationMs, volume });
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = volume;
+    o.connect(g); g.connect(ctx.destination);
+    const now = ctx.currentTime;
+    o.start(now);
+    g.gain.setValueAtTime(volume, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+    o.stop(now + durationMs / 1000);
+  };
+
   const getServerBaseUrl = (httpUrl: string) => {
     try {
       const url = new URL(httpUrl);
@@ -191,54 +244,40 @@ export default function TicTacToeMultiplayerScreen({
     socket.on("connect", () => {
       const userId = getUserId();
       const userName = getUserName();
-      socket.emit("join_game", {
-        gameCode: roomCode,
-        userId,
-        userName,
-        isHost: !!config?.isHost,
-      });
+      setMySocketId(socket.id ?? "");
+      console.log("🔌 Connected to socket", { socketId: socket.id, userId, userName, roomCode });
+
+      // Rejoindre la partie et demander l'état courant
+      const timePerTurn = typeof config?.timePerQuestion === 'number' ? config.timePerQuestion : TURN_DURATION;
+      socket.emit("join_game", { gameCode: roomCode, userId, userName, timePerTurn });
+      socket.emit("request_state", { gameCode: roomCode });
     });
 
-    // Etat de jeu autoritaire
+    // Ecoute de l'état minimal du morpion
     socket.on(
       "ttt_state",
       (s: {
         grid: GridCell[];
         currentTurn: "X" | "O";
-        hearts: Record<string, number>;
         symbols: Record<string, "X" | "O">;
         winner: { userId: string; symbol: "X" | "O" } | "Draw" | null;
         turnStart: number;
+        turnDuration?: number;
       }) => {
+        const prevTurn = serverTurn;
         setGrid(s.grid as GridCell[]);
         setServerTurn(s.currentTurn);
         setSymbolsMap(s.symbols || {});
         setTurnStart(s.turnStart || Date.now());
-
-        // Mettre à jour les coeurs dans l'UI des deux joueurs via symboles X/O
-        setPlayers((prev) => {
-          const next = [...prev];
-          const xUserId = Object.keys(s.symbols || {}).find(
-            (uid) => s.symbols[uid] === "X"
-          );
-          const oUserId = Object.keys(s.symbols || {}).find(
-            (uid) => s.symbols[uid] === "O"
-          );
-          if (xUserId)
-            next[0] = {
-              ...next[0],
-              chances: s.hearts?.[xUserId] ?? next[0].chances,
-            };
-          if (oUserId)
-            next[1] = {
-              ...next[1],
-              chances: s.hearts?.[oUserId] ?? next[1].chances,
-            };
-          return next;
-        });
-
-        // Index du joueur courant pour l'UI locale (X=0, O=1)
+        const dur = typeof s.turnDuration === 'number' ? s.turnDuration : TURN_DURATION;
+        setServerTurnDuration(dur);
+        const remain = Math.max(0, dur - Math.floor((Date.now() - (s.turnStart || Date.now())) / 1000));
+        setTurnTimeRemaining(remain);
         setCurrentPlayerIndex(s.currentTurn === "X" ? 0 : 1);
+        // Son léger quand le tour change
+        if (prevTurn && prevTurn !== s.currentTurn) {
+          playBeep(650, 90, "sine", 0.05);
+        }
       }
     );
 
@@ -247,82 +286,86 @@ export default function TicTacToeMultiplayerScreen({
       (payload: { winner: { userId: string; symbol: "X" | "O" } | "Draw" }) => {
         if (payload.winner === "Draw") {
           setWinner("Draw");
-          return;
+          playBeep(380, 250, "triangle", 0.08);
+        } else {
+          const w = payload.winner;
+          // Attribuer l'affichage de la victoire du point de vue local
+          setWinner(w.userId === myUserId ? players[0] : players[1]);
+          if (w.userId === myUserId) {
+            playBeep(880, 180, "sine", 0.08);
+            setTimeout(() => playBeep(1320, 220, "sine", 0.08), 120);
+          } else {
+            playBeep(240, 260, "sawtooth", 0.06);
+          }
         }
-        const symbol = payload.winner.symbol;
-        const player = symbol === "X" ? players[0] : players[1];
-        setWinner(player);
       }
     );
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      // Ne pas déconnecter pour maintenir la session socket active lors de la navigation
+      // socketRef.current = null; // on garde la référence si nécessaire
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketBase, roomCode]);
 
-  // Turn Timer Logic synchronisé (Choosing a cell)
+  // Décompte synchronisé avec le serveur (affichage)
   useEffect(() => {
     const timer = setInterval(() => {
       const elapsed = Math.floor((Date.now() - turnStart) / 1000);
-      const remain = Math.max(0, TURN_DURATION - elapsed);
+      const remain = Math.max(0, serverTurnDuration - elapsed);
       setTurnTimeRemaining(remain);
     }, 1000);
     return () => clearInterval(timer);
-  }, [turnStart]);
+  }, [turnStart, serverTurnDuration]);
 
-  // Question Timer Logic (Answering)
+  // Increment play count when game ends
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isQuestionModalOpen && !hasAnswered && questionTimeRemaining > 0) {
-      timer = setInterval(() => {
-        setQuestionTimeRemaining((prev) => {
-          if (prev <= 1) {
-            // Time is up: treat as incorrect answer and notify server
-            setHasAnswered(true);
-            setIsCorrectAnswer(false);
-            if (selectedGridIndex !== null) {
-              try {
-                socketRef.current?.emit("tictactoe_answer", {
-                  gameCode: roomCode,
-                  userId: myUserId,
-                  index: selectedGridIndex,
-                  correct: false,
-                });
-              } catch {}
-            }
-            setIsQuestionModalOpen(false);
-            setCurrentQuestion(null);
-            return 0;
+    const incrementPlayCount = async () => {
+      if (winner) {
+        try {
+          const userId = getUserId();
+          if (userId) {
+            await axios.post(`${serverIp}/quiz/incrementPlayed`, {
+              quizId: quizId,
+              userId: userId,
+            });
           }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [
-    isQuestionModalOpen,
-    hasAnswered,
-    questionTimeRemaining,
-    selectedGridIndex,
-    roomCode,
-    myUserId,
-  ]);
+        } catch (error) {
+          console.error("Failed to increment play count:", error);
+        }
+      }
+    };
+
+    incrementPlayCount();
+  }, [winner, quizId]);
+
+
 
   const handleCellClick = (index: number) => {
-    if (grid[index] || winner || isQuestionModalOpen) return;
-    // Tour strict: seul le joueur dont le symbole correspond au tour serveur peut jouer
-    if (!mySymbol || mySymbol !== serverTurn) return;
+    console.log("🖱️ Cell clicked:", index);
+    console.log("   Grid[index]:", grid[index]);
+    console.log("   Winner:", winner);
+    console.log("   IsQuestionModalOpen:", isQuestionModalOpen);
+    console.log("   MySymbol:", mySymbol);
+    console.log("   ServerTurn:", serverTurn);
 
-    // Select a random question
+    // Etat simple: on laisse le serveur arbitrer (occupation/ordre de tour)
+    if (grid[index] || winner) {
+      console.log("❌ Click ignored: invalid state");
+      return;
+    }
+    // Ouvrir la question: le joueur doit répondre correctement pour jouer
     const randomQuestion =
       quiz.questions[Math.floor(Math.random() * quiz.questions.length)];
     setCurrentQuestion(randomQuestion);
     setSelectedGridIndex(index);
-    setQuestionTimeRemaining(config.timePerQuestion);
     setSelectedOption(null);
     setHasAnswered(false);
+    playBeep(520, 90, "square", 0.05);
+    // Timer question basé sur le temps restant du tour serveur
+    const elapsed = Math.floor((Date.now() - turnStart) / 1000);
+    const remain = Math.max(0, serverTurnDuration - elapsed);
+    setQuestionTimeRemaining(remain);
     setIsQuestionModalOpen(true);
   };
 
@@ -334,24 +377,57 @@ export default function TicTacToeMultiplayerScreen({
     setHasAnswered(true);
     setIsCorrectAnswer(correct);
 
-    // Emettre la réponse au serveur qui arbitre et diffuse le nouvel état
-    if (selectedGridIndex !== null) {
+    // Si bonne réponse -> on joue le coup
+    if (correct && selectedGridIndex !== null) {
       try {
-        socketRef.current?.emit("tictactoe_answer", {
+        socketRef.current?.emit("make_move", {
           gameCode: roomCode,
           userId: myUserId,
           index: selectedGridIndex,
-          correct,
         });
-      } catch {}
+        console.log("📤 make_move emitted (correct answer)", { index: selectedGridIndex });
+      } catch (e) {
+        console.warn("Failed to emit make_move", e);
+      }
+      playBeep(900, 140, "sine", 0.07);
+    }
+    // Si mauvaise réponse -> passer immédiatement le tour côté serveur
+    else {
+      try {
+        socketRef.current?.emit("answer_fail", { gameCode: roomCode, userId: myUserId });
+        console.log("📤 answer_fail emitted");
+      } catch { }
+      playBeep(220, 160, "triangle", 0.07);
     }
 
-    // Wait longer to read explanation
+    // Laisser le temps de lire le feedback
     setTimeout(() => {
       setIsQuestionModalOpen(false);
       setCurrentQuestion(null);
-    }, 4000);
+    }, 2000);
   };
+
+  // Timer de la question: si le temps expire, considérer comme faux et fermer sans jouer
+  useEffect(() => {
+    if (!isQuestionModalOpen || hasAnswered) return;
+    if (questionTimeRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setQuestionTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // Temps écoulé -> pas de coup joué, passer le tour
+          setHasAnswered(true);
+          setIsCorrectAnswer(false);
+          try { socketRef.current?.emit("answer_fail", { gameCode: roomCode, userId: myUserId }); } catch { }
+          playBeep(260, 160, "sawtooth", 0.06);
+          setIsQuestionModalOpen(false);
+          setCurrentQuestion(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isQuestionModalOpen, hasAnswered, questionTimeRemaining]);
 
   return (
     <div
@@ -370,14 +446,13 @@ export default function TicTacToeMultiplayerScreen({
           {players.map((player, index) => (
             <div
               key={player.id}
-              className={`flex flex-col gap-2 px-5 py-3 rounded-2xl border transition-all duration-300 ${
-                currentPlayerIndex === index
-                  ? `${player.bgColor} ${player.borderColor} scale-105 shadow-[0_0_20px_rgba(0,0,0,0.3)]`
-                  : "bg-white/5 border-white/5 opacity-60"
-              }`}
+              className={`flex flex-col gap-2 px-5 py-3 rounded-2xl border transition-all duration-300 ${currentPlayerIndex === index
+                ? `${player.borderColor} scale-105 shadow-[0_0_40px_rgba(79,70,229,0.2)] bg-white/10`
+                : "bg-white/5 border-white/5 opacity-70"
+                }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-full bg-black/20 ${player.color}`}>
+                <div className={`p-2 rounded-full bg-black/30 ring-1 ring-white/10 ${player.color}`}>
                   {player.avatar}
                 </div>
                 <div>
@@ -385,40 +460,35 @@ export default function TicTacToeMultiplayerScreen({
                     {player.name}
                   </div>
                   <div
-                    className="text-xs font-medium"
+                    className="flex items-center gap-2 mt-0.5 text-xs font-medium"
                     style={{ color: THEME.grayText }}
                   >
-                    Symbole: {player.symbol}
+                    <span>Symbole:</span>
+                    {player.symbol === "X" ? (
+                      <X className="w-4 h-4 text-blue-400" />
+                    ) : (
+                      <Circle className="w-3.5 h-3.5 text-red-400" />
+                    )}
                   </div>
                 </div>
                 {currentPlayerIndex === index &&
                   !winner &&
                   !isQuestionModalOpen && (
-                    <div className="ml-2 flex items-center gap-1.5 text-xs font-mono text-white/80 bg-black/30 px-2 py-1 rounded-lg">
-                      <Timer className="w-3 h-3" />
-                      {turnTimeRemaining}s
+                    <div className="ml-auto flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/50" />
+                      <span className={`font-mono font-bold text-lg ${turnTimeRemaining <= 5 ? "text-red-400 animate-pulse" : "text-white"
+                        }`}>
+                        {turnTimeRemaining}s
+                      </span>
                     </div>
                   )}
-              </div>
-              {/* Chances Display */}
-              <div className="flex items-center gap-1 mt-1">
-                {Array.from({ length: MAX_CHANCES }).map((_, i) => (
-                  <Heart
-                    key={i}
-                    className={`w-3 h-3 ${
-                      i < player.chances
-                        ? "fill-red-500 text-red-500"
-                        : "text-gray-600"
-                    }`}
-                  />
-                ))}
               </div>
             </div>
           ))}
         </div>
         <button
           onClick={() => router.push("/dashboard")}
-          className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors hover:text-white"
+          className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors hover:text-white hover:scale-105 active:scale-95"
           style={{ color: THEME.grayText }}
         >
           <X className="w-5 h-5" />
@@ -451,6 +521,8 @@ export default function TicTacToeMultiplayerScreen({
                 <span className="text-purple-400 animate-pulse">
                   Question en cours...
                 </span>
+              ) : mySymbol && mySymbol === serverTurn ? (
+                <span className="font-bold text-green-400">C&apos;est votre tour</span>
               ) : (
                 <>
                   C&apos;est au tour de{" "}
@@ -465,34 +537,34 @@ export default function TicTacToeMultiplayerScreen({
         </div>
 
         <div
-          className="grid grid-cols-3 gap-4 p-4 rounded-3xl backdrop-blur-sm border border-white/10 shadow-2xl"
+          className="grid grid-cols-3 gap-4 p-4 rounded-3xl backdrop-blur-sm border border-white/10 shadow-2xl bg-gradient-to-br from-slate-900/50 via-slate-800/40 to-slate-900/30"
           style={{ backgroundColor: THEME.gray2 }}
         >
           {grid.map((cell, index) => (
             <motion.button
               key={index}
               onClick={() => handleCellClick(index)}
-              disabled={!!cell || !!winner || isQuestionModalOpen}
+              disabled={!!cell || !!winner || isQuestionModalOpen || !mySymbol || mySymbol !== serverTurn}
               whileHover={
                 !cell && !winner && !isQuestionModalOpen
-                  ? { scale: 1.02, backgroundColor: "rgba(255,255,255,0.08)" }
+                  ? { scale: 1.05, boxShadow: "0 0 18px rgba(59,130,246,0.25)" }
                   : {}
               }
               whileTap={
-                !cell && !winner && !isQuestionModalOpen ? { scale: 0.98 } : {}
+                !cell && !winner && !isQuestionModalOpen ? { scale: 0.96 } : {}
               }
-              className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center text-5xl font-bold transition-all relative overflow-hidden ${
-                cell
-                  ? "bg-black/40 shadow-inner"
-                  : "bg-white/5 hover:bg-white/10 border border-white/5"
-              }`}
+              className={`w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center text-5xl font-bold transition-all relative overflow-hidden ${cell
+                ? "bg-black/40 shadow-inner ring-1 ring-white/10"
+                : "bg-white/5 hover:bg-white/10 border border-white/5 ring-1 ring-white/10"
+                }`}
             >
               <AnimatePresence>
                 {cell === "X" && (
                   <motion.div
                     initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                    className="text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]"
+                    animate={{ scale: 1, rotate: 0, opacity: 1, filter: "drop-shadow(0 0 12px rgba(59,130,246,0.6))" }}
+                    transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                    className="text-blue-400"
                   >
                     <X className="w-12 h-12 sm:w-16 sm:h-16 stroke-[2.5]" />
                   </motion.div>
@@ -500,8 +572,9 @@ export default function TicTacToeMultiplayerScreen({
                 {cell === "O" && (
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.5)]"
+                    animate={{ scale: 1, opacity: 1, filter: "drop-shadow(0 0 12px rgba(248,113,113,0.6))" }}
+                    transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                    className="text-red-400"
                   >
                     <Circle className="w-10 h-10 sm:w-14 sm:h-14 stroke-[2.5]" />
                   </motion.div>
@@ -514,137 +587,137 @@ export default function TicTacToeMultiplayerScreen({
 
       {/* Question Modal */}
       <AnimatePresence>
-        {isQuestionModalOpen && currentQuestion && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
-          >
+        {
+          isQuestionModalOpen && currentQuestion && (
             <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="border border-white/10 rounded-3xl p-8 w-full max-w-2xl shadow-2xl relative overflow-hidden"
-              style={{ backgroundColor: THEME.gray2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl"
             >
-              {/* Background Glow */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-500 via-purple-500 to-red-500 opacity-50" />
-
-              {/* Timer Bar */}
-              <div className="flex items-center justify-between mb-6">
-                <span
-                  className="text-sm font-medium uppercase tracking-wider"
-                  style={{ color: THEME.grayText }}
-                >
-                  Question pour {currentPlayer.name}
-                </span>
-                <div
-                  className={`flex items-center gap-2 font-mono font-bold ${
-                    questionTimeRemaining <= 5 ? "text-red-400" : "text-white"
-                  }`}
-                >
-                  <Clock className="w-4 h-4" />
-                  {questionTimeRemaining}s
-                </div>
-              </div>
-
-              <h3
-                className="text-xl sm:text-2xl font-serif font-medium mb-8 leading-relaxed"
-                style={{ color: THEME.white }}
+              <motion.div
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                className="border border-white/10 rounded-3xl p-6 w-full max-w-lg shadow-2xl relative overflow-hidden"
+                style={{ backgroundColor: THEME.gray2 }}
               >
-                {currentQuestion.question}
-              </h3>
+                {/* Background Glow */}
+                {/* Background Glow removed */}
 
-              <div className="grid grid-cols-1 gap-3 mb-6">
-                {currentQuestion.options.map((option, idx) => {
-                  const isSelected = selectedOption === option;
-                  const isCorrect = option === currentQuestion.correctAnswer;
-
-                  let buttonStyle =
-                    "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20";
-                  let icon = null;
-
-                  if (hasAnswered) {
-                    if (isCorrect) {
-                      buttonStyle =
-                        "bg-green-500/10 border-green-500/50 text-green-400";
-                      icon = (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
-                      );
-                    } else if (isSelected) {
-                      buttonStyle =
-                        "bg-red-500/10 border-red-500/50 text-red-400";
-                      icon = <XCircle className="w-5 h-5 text-red-400" />;
-                    } else {
-                      buttonStyle = "bg-white/5 border-white/5 opacity-40";
-                    }
-                  }
-
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleOptionSelect(option)}
-                      disabled={hasAnswered}
-                      className={`p-5 rounded-xl border text-left transition-all font-medium flex items-center justify-between group ${buttonStyle}`}
-                      style={{
-                        color:
-                          hasAnswered && (isCorrect || isSelected)
-                            ? undefined
-                            : THEME.white,
-                      }}
-                    >
-                      <span>{option}</span>
-                      {icon}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Feedback & Explanation */}
-              <AnimatePresence>
-                {hasAnswered && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="border-t border-white/10 pt-6"
+                {/* Timer Bar */}
+                <div className="flex items-center justify-between mb-6">
+                  <span
+                    className="text-sm font-medium uppercase tracking-wider"
+                    style={{ color: THEME.grayText }}
                   >
-                    <div
-                      className={`flex items-center gap-2 mb-3 font-bold ${
-                        isCorrectAnswer ? "text-green-400" : "text-red-400"
-                      }`}
-                    >
-                      {isCorrectAnswer ? (
-                        <>
-                          <CheckCircle2 className="w-5 h-5" />
-                          Bonne réponse ! Case validée.
-                        </>
-                      ) : (
-                        <>
-                          <HeartCrack className="w-5 h-5" />
-                          Mauvaise réponse ! Une chance en moins.
-                        </>
-                      )}
-                    </div>
-                    <div
-                      className="bg-white/5 rounded-xl p-4 text-sm leading-relaxed border border-white/5"
-                      style={{ color: THEME.grayText }}
-                    >
-                      <span
-                        className="font-medium block mb-1"
-                        style={{ color: THEME.white }}
+                    Question pour {currentPlayer.name}
+                  </span>
+                  <div className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-lg border border-white/5">
+                    <Clock className="w-4 h-4 text-white/50" />
+                    <span className={`font-mono font-bold text-xl ${questionTimeRemaining <= 5 ? "text-red-400 animate-pulse" : "text-white"
+                      }`}>
+                      {questionTimeRemaining}s
+                    </span>
+                  </div>
+                </div>
+
+                <h3
+                  className="text-lg sm:text-xl font-serif font-medium mb-4 leading-relaxed"
+                  style={{ color: THEME.white }}
+                >
+                  {currentQuestion.question}
+                </h3>
+
+                <div className="grid grid-cols-1 gap-3 mb-6">
+                  {currentQuestion.options.map((option, idx) => {
+                    const isSelected = selectedOption === option;
+                    const isCorrect = option === currentQuestion.correctAnswer;
+
+                    let buttonStyle =
+                      "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20";
+                    let icon = null;
+
+                    if (hasAnswered) {
+                      if (isCorrect) {
+                        buttonStyle =
+                          "bg-green-500/10 border-green-500/50 text-green-400";
+                        icon = (
+                          <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        );
+                      } else if (isSelected) {
+                        buttonStyle =
+                          "bg-red-500/10 border-red-500/50 text-red-400";
+                        icon = <XCircle className="w-5 h-5 text-red-400" />;
+                      } else {
+                        buttonStyle = "bg-white/5 border-white/5 opacity-40";
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleOptionSelect(option)}
+                        disabled={hasAnswered}
+                        className={`p-3 rounded-xl border text-left transition-all font-medium flex items-center justify-between group ${buttonStyle} hover:scale-[1.01] active:scale-[0.99]`}
+                        style={{
+                          color:
+                            hasAnswered && (isCorrect || isSelected)
+                              ? undefined
+                              : THEME.white,
+                        }}
                       >
-                        Explication :
-                      </span>
-                      {currentQuestion.explanation}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        <span>{option}</span>
+                        {icon}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Feedback & Explanation */}
+                <AnimatePresence>
+                  {hasAnswered && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="border-t border-white/10 pt-6"
+                    >
+                      <div
+                        className={`flex items-center gap-2 mb-3 font-bold ${isCorrectAnswer ? "text-green-400" : "text-red-400"
+                          }`}
+                      >
+                        {isCorrectAnswer ? (
+                          <>
+                            <CheckCircle2 className="w-5 h-5" />
+                            Bonne réponse ! Case validée.
+                          </>
+                        ) : (
+                          <>
+                            <HeartCrack className="w-5 h-5" />
+                            Mauvaise réponse !
+                          </>
+                        )}
+                      </div>
+                      <div
+                        className="bg-white/5 rounded-xl p-4 text-sm leading-relaxed border border-white/5"
+                        style={{ color: THEME.grayText }}
+                      >
+                        <span
+                          className="font-medium block mb-1"
+                          style={{ color: THEME.white }}
+                        >
+                          Explication :
+                        </span>
+                        {currentQuestion.explanation}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )
+        }
       </AnimatePresence>
-    </div>
+    </div >
   );
 }
