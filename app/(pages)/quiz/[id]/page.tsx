@@ -330,7 +330,7 @@ export default function QuizDetailsPage() {
                         <div>
                             {/* Onglets */}
                             <div className="flex gap-2 mb-6">
-                                {['Questions', 'Flashcards', 'Notes'].map((tab) => (
+                                {['Questions', 'Flashcards', 'Résumé'].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab.toLowerCase())}
@@ -345,7 +345,7 @@ export default function QuizDetailsPage() {
                             </div>
 
                             {/* Contenu des Onglets */}
-                            <div className="space-y-3">
+                            <div className="space-y-3 mb-3">
                                 {activeTab === 'questions' && (
                                     <div className="space-y-3">
                                         {quiz.questions.map((q, index) => (
@@ -378,11 +378,11 @@ export default function QuizDetailsPage() {
                                                     <div className="text-white font-medium mb-3 text-sm">{card.term}</div>
                                                     <div className="h-px bg-white/10 mb-3" />
                                                     <div className="text-gray-400 text-sm mb-2 leading-relaxed">{card.definition}</div>
-                                                    {card.hint && (
+                                                    {/* {card.hint && (
                                                         <div className="text-gray-500 text-xs italic mt-3">
                                                             💡 {card.hint}
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             ))
                                         ) : (
@@ -392,8 +392,8 @@ export default function QuizDetailsPage() {
                                         )}
                                     </div>
                                 )}
-                                {activeTab === 'notes' && (
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                                {activeTab === 'résumé' && (
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-5">
                                         <h3 className="text-white font-serif font-medium mb-5 text-lg flex items-center gap-2">
                                             <FileText className="w-5 h-5" />
                                             Résumé du cours
@@ -422,7 +422,7 @@ export default function QuizDetailsPage() {
                     </div>
 
                     {/* Colonne Droite (Desktop) - Sticky */}
-                    <div className="lg:sticky lg:top-8 lg:h-fit space-y-6">
+                    <div className="lg:sticky lg:top-8 md:top-5 sm:top-3 lg:h-fit space-y-6">
                         {/* Carte Score de Maîtrise */}
                         <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
                             <div className="flex items-center gap-3 mb-4">

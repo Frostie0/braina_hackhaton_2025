@@ -1,9 +1,9 @@
-import { Metadata } from 'next';
-import DashboardClient from '@/components/pages/DashboardClient';
+import { Metadata } from "next";
+import DashboardClient from "@/components/pages/DashboardClient";
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Dashboard | Braina',
+    absolute: "Dashboard | Braina",
   },
 };
 
