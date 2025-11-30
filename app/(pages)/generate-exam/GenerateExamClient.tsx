@@ -182,10 +182,19 @@ export default function GenerateExamClient() {
                 // Succès !
                 setModalStatus('success');
 
-                // Attendre 2 secondes puis rediriger vers le dashboard
+                // Récupérer l'ID du quiz créé
+                const quizId = response.data?.quiz?._id || response.data?._id;
+
+                // Attendre 2 secondes puis rediriger vers l'examen
                 setTimeout(() => {
                     setIsModalOpen(false);
-                    router.push('/dashboard');
+                    if (quizId) {
+                        // Rediriger vers l'écran d'examen
+                        router.push(`/play/exam/${quizId}`);
+                    } else {
+                        // Fallback vers le dashboard si pas d'ID
+                        router.push('/dashboard');
+                    }
                 }, 2000);
             } else {
                 throw new Error(response.data?.error || 'Erreur lors de la création de l\'examen');
@@ -362,7 +371,7 @@ export default function GenerateExamClient() {
                             type="submit"
                             disabled={!isFormValid()}
                             onClick={handleGenerate}
-                            className="w-full py-4 px-6 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-gray-500 transition-all"
+                            className="w-full py-4 px-6 bg-purple-500 text-white font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-gray-500 transition-all"
                         >
                             {!isFormValid() ? 'Complétez le formulaire' : 'Générer l\'examen blanc'}
                         </button>

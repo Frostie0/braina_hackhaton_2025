@@ -94,79 +94,248 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
     if (isSubmitted) {
         const score = calculateScore();
         const grade = getGrade(score);
+        const correctCount = quiz.questions.filter(q => answers[q.id] === q.correctAnswer).length;
+        const incorrectCount = totalQuestions - correctCount;
+        const percentage = Math.round((correctCount / totalQuestions) * 100);
 
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4 font-sans">
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 font-sans">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white rounded-sm shadow-2xl max-w-4xl w-full overflow-hidden relative"
-                    style={{ minHeight: '600px' }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full overflow-hidden"
                 >
-                    {/* Header Result */}
-                    <div className="bg-gray-100 border-b border-gray-300 p-8 flex justify-between items-start">
-                        <div>
-                            <h1 className="text-3xl font-serif font-bold text-gray-800 mb-2">Résultats de l'Examen</h1>
-                            <p className="text-gray-600">Sujet : {quiz.title}</p>
-                            <p className="text-gray-500 text-sm mt-1">Date : {new Date().toLocaleDateString()}</p>
+                    {/* Header Result - Gradient */}
+                    <div className="relative bg-purple-500 p-8 text-white overflow-hidden">
+                        {/* Background Pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                            <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
                         </div>
 
-                        {/* Stamp Grade */}
-                        <motion.div
-                            initial={{ scale: 2, opacity: 0, rotate: -20 }}
-                            animate={{ scale: 1, opacity: 1, rotate: -15 }}
-                            transition={{ delay: 0.5, type: 'spring' }}
-                            className={`border-4 rounded-xl p-4 font-black text-4xl uppercase tracking-widest opacity-80 transform rotate-[-15deg] ${grade.stamp}`}
-                        >
-                            {score}/20
-                        </motion.div>
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div className="flex-1">
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                                            <FileText className="w-6 h-6" />
+                                        </div>
+                                        <h1 className="text-3xl lg:text-4xl font-bold">Résultats de l'Examen</h1>
+                                    </div>
+                                    <p className="text-white/90 text-lg font-medium">{quiz.title}</p>
+                                    <p className="text-white/70 text-sm mt-2">
+                                        Complété le {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </p>
+                                </motion.div>
+                            </div>
+
+                            {/* 3D Score Badge */}
+                            <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ delay: 0.4, type: 'spring', stiffness: 200, damping: 15 }}
+                                className="relative"
+                            >
+                                <div className={`relative bg-white rounded-2xl p-6 shadow-2xl ${grade.stamp.replace('border-', 'ring-4 ring-').replace('text-', '')} ring-opacity-50`}>
+                                    <div className="text-center">
+                                        <div className="text-5xl font-black text-gray-800">
+                                            {score}
+                                        </div>
+                                        <div className="text-2xl font-bold text-gray-400">/20</div>
+                                        <div className={`mt-2 text-sm font-bold uppercase tracking-wider ${grade.color}`}>
+                                            {grade.label}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
                     </div>
 
-                    {/* Content Result */}
-                    <div className="p-8 overflow-y-auto max-h-[60vh]">
-                        <div className="space-y-6">
+                    {/* Statistics Section */}
+                    <div className="bg-gradient-to-br from-gray-50 to-white p-6 border-b border-gray-200">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Circular Progress */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="flex items-center justify-center"
+                            >
+                                <div className="relative w-32 h-32">
+                                    <svg className="transform -rotate-90 w-32 h-32">
+                                        <circle
+                                            cx="64"
+                                            cy="64"
+                                            r="56"
+                                            stroke="currentColor"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            className="text-gray-200"
+                                        />
+                                        <motion.circle
+                                            cx="64"
+                                            cy="64"
+                                            r="56"
+                                            stroke="currentColor"
+                                            strokeWidth="8"
+                                            fill="none"
+                                            strokeLinecap="round"
+                                            className={score >= 14 ? 'text-green-500' : score >= 10 ? 'text-orange-500' : 'text-red-500'}
+                                            initial={{ strokeDasharray: "0 352" }}
+                                            animate={{ strokeDasharray: `${percentage * 3.52} 352` }}
+                                            transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-gray-800">{percentage}%</div>
+                                            <div className="text-xs text-gray-500">Réussite</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Correct/Incorrect Stats */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6 }}
+                                className="flex flex-col gap-3"
+                            >
+                                <div className="flex items-center gap-3 bg-green-50 rounded-xl p-4 border border-green-200">
+                                    <div className="p-2 bg-green-500 rounded-lg">
+                                        <CheckCircle2 className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="text-2xl font-bold text-green-700">{correctCount}</div>
+                                        <div className="text-sm text-green-600">Correctes</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-red-50 rounded-xl p-4 border border-red-200">
+                                    <div className="p-2 bg-red-500 rounded-lg">
+                                        <XCircle className="w-6 h-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <div className="text-2xl font-bold text-red-700">{incorrectCount}</div>
+                                        <div className="text-sm text-red-600">Incorrectes</div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            {/* Time & Questions */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7 }}
+                                className="flex flex-col gap-3"
+                            >
+                                <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Clock className="w-5 h-5 text-blue-600" />
+                                        <div className="text-sm font-medium text-blue-700">Temps écoulé</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-blue-800">
+                                        {formatTime(EXAM_DURATION - timeRemaining)}
+                                    </div>
+                                </div>
+                                <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <FileText className="w-5 h-5 text-purple-600" />
+                                        <div className="text-sm font-medium text-purple-700">Questions</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-purple-800">
+                                        {totalQuestions}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+
+                    {/* Content Result - Question Cards */}
+                    <div className="p-6 lg:p-8 overflow-y-auto max-h-[50vh] bg-gray-50">
+                        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-gradient-to-b from-purple-600 to-indigo-600 rounded-full"></div>
+                            Détail des réponses
+                        </h2>
+                        <div className="space-y-4">
                             {quiz.questions.map((q, idx) => {
                                 const userAnswer = answers[q.id];
                                 const isCorrect = userAnswer === q.correctAnswer;
 
                                 return (
-                                    <div key={q.id} className={`p-4 rounded-lg border-l-4 ${isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
-                                        <div className="flex items-start gap-3">
-                                            <span className="font-bold text-gray-500">Q{idx + 1}.</span>
-                                            <div className="flex-1">
-                                                <p className="font-medium text-gray-800 mb-2">{q.question}</p>
-                                                <div className="flex flex-col gap-1 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-gray-500 w-24">Votre réponse:</span>
-                                                        <span className={`font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                                                            {userAnswer || 'Aucune réponse'}
-                                                        </span>
-                                                    </div>
-                                                    {!isCorrect && (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-gray-500 w-24">Correction:</span>
-                                                            <span className="font-medium text-green-700">{q.correctAnswer}</span>
-                                                        </div>
-                                                    )}
+                                    <motion.div
+                                        key={q.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.8 + idx * 0.1 }}
+                                        className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden border border-gray-200"
+                                    >
+                                        <div className="p-5">
+                                            <div className="flex items-start gap-4">
+                                                {/* Question Number Badge */}
+                                                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${isCorrect ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-rose-600'
+                                                    }`}>
+                                                    {idx + 1}
                                                 </div>
-                                                <p className="mt-2 text-xs text-gray-500 italic border-t border-gray-200 pt-2">
-                                                    {q.explanation}
-                                                </p>
+
+                                                <div className="flex-1">
+                                                    <p className="font-medium text-gray-900 mb-3 leading-relaxed">{q.question}</p>
+
+                                                    {/* Answer Section */}
+                                                    <div className="space-y-2 mb-3">
+                                                        <div className="flex items-start gap-2">
+                                                            <span className="text-sm text-gray-500 font-medium min-w-[100px]">Votre réponse:</span>
+                                                            <span className={`text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                                                {userAnswer || 'Aucune réponse'}
+                                                            </span>
+                                                        </div>
+                                                        {!isCorrect && (
+                                                            <div className="flex items-start gap-2">
+                                                                <span className="text-sm text-gray-500 font-medium min-w-[100px]">Bonne réponse:</span>
+                                                                <span className="text-sm font-semibold text-green-700">{q.correctAnswer}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Explanation */}
+                                                    <div className="border rounded-lg p-3 border-blue-400">
+                                                        <div className="flex gap-2">
+                                                            <div className="text-blue-600 mt-0.5">💡</div>
+                                                            <p className="text-sm text-gray-700 leading-relaxed">
+                                                                {q.explanation}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Status Icon */}
+                                                {isCorrect ? (
+                                                    <CheckCircle2 className="flex-shrink-0 text-green-500 w-7 h-7" />
+                                                ) : (
+                                                    <XCircle className="flex-shrink-0 text-red-500 w-7 h-7" />
+                                                )}
                                             </div>
-                                            {isCorrect ? <CheckCircle2 className="text-green-500 w-6 h-6" /> : <XCircle className="text-red-500 w-6 h-6" />}
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>
                     </div>
 
                     {/* Footer Result */}
-                    <div className="bg-gray-50 border-t border-gray-200 p-6 flex justify-end">
+                    <div className="bg-white border-t border-gray-200 p-6 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Score final : <span className="font-bold text-gray-800">{score}/20</span>
+                        </div>
                         <button
                             onClick={() => router.push('/dashboard')}
-                            className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                            className="px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
                         >
+                            <ChevronLeft className="w-5 h-5" />
                             Retour au Tableau de bord
                         </button>
                     </div>
@@ -284,11 +453,29 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                             {q.question}
                                         </p>
                                     </div>
-                                    <div className="pl-6 space-y-1">
+                                    <div className="pl-4 space-y-2.5 mt-3">
                                         {q.options.map((option, optIdx) => (
-                                            <label key={optIdx} className="flex items-start gap-2 cursor-pointer group">
-                                                <div className={`mt-0.5 w-3 h-3 border border-black rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black' : 'group-hover:bg-gray-200'}`}>
-                                                    {answers[q.id] === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                            <label
+                                                key={optIdx}
+                                                className={`flex items-start gap-3 cursor-pointer group px-3 py-2.5 rounded-md transition-all duration-200 ${answers[q.id] === option
+                                                    ? 'bg-gray-100 shadow-sm'
+                                                    : 'hover:bg-gray-50 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                <div className="relative mt-0.5">
+                                                    <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-200 ${answers[q.id] === option
+                                                        ? 'border-black bg-black shadow-md'
+                                                        : 'border-gray-400 group-hover:border-gray-600 group-hover:shadow-sm'
+                                                        }`}>
+                                                        {answers[q.id] === option && (
+                                                            <motion.div
+                                                                initial={{ scale: 0 }}
+                                                                animate={{ scale: 1 }}
+                                                                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                                                className="w-2.5 h-2.5 bg-white rounded-full"
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <input
                                                     type="radio"
@@ -297,7 +484,10 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                                     onChange={() => handleOptionSelect(q.id, option)}
                                                     checked={answers[q.id] === option}
                                                 />
-                                                <span className="text-sm">{option}</span>
+                                                <span className={`text-sm leading-relaxed flex-1 transition-colors ${answers[q.id] === option ? 'font-medium text-black' : 'text-gray-700'
+                                                    }`}>
+                                                    {option}
+                                                </span>
                                             </label>
                                         ))}
                                     </div>
@@ -323,11 +513,29 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                             {q.question}
                                         </p>
                                     </div>
-                                    <div className="pl-6 space-y-1">
+                                    <div className="pl-4 space-y-2.5 mt-3">
                                         {q.options.map((option, optIdx) => (
-                                            <label key={optIdx} className="flex items-start gap-2 cursor-pointer group">
-                                                <div className={`mt-0.5 w-3 h-3 border border-black rounded-full flex items-center justify-center transition-colors ${answers[q.id] === option ? 'bg-black' : 'group-hover:bg-gray-200'}`}>
-                                                    {answers[q.id] === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                            <label
+                                                key={optIdx}
+                                                className={`flex items-start gap-3 cursor-pointer group px-3 py-2.5 rounded-md transition-all duration-200 ${answers[q.id] === option
+                                                    ? 'bg-gray-100 shadow-sm'
+                                                    : 'hover:bg-gray-50 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                <div className="relative mt-0.5">
+                                                    <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-200 ${answers[q.id] === option
+                                                        ? 'border-black bg-black shadow-md'
+                                                        : 'border-gray-400 group-hover:border-gray-600 group-hover:shadow-sm'
+                                                        }`}>
+                                                        {answers[q.id] === option && (
+                                                            <motion.div
+                                                                initial={{ scale: 0 }}
+                                                                animate={{ scale: 1 }}
+                                                                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                                                className="w-2.5 h-2.5 bg-white rounded-full"
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <input
                                                     type="radio"
@@ -336,7 +544,10 @@ export default function ExamScreen({ quiz, config }: ExamScreenProps) {
                                                     onChange={() => handleOptionSelect(q.id, option)}
                                                     checked={answers[q.id] === option}
                                                 />
-                                                <span className="text-sm">{option}</span>
+                                                <span className={`text-sm leading-relaxed flex-1 transition-colors ${answers[q.id] === option ? 'font-medium text-black' : 'text-gray-700'
+                                                    }`}>
+                                                    {option}
+                                                </span>
                                             </label>
                                         ))}
                                     </div>

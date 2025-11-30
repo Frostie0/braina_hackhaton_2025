@@ -98,7 +98,7 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                     className="relative w-full max-w-md bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl border border-gray-700 overflow-hidden"
                 >
                     {/* Effet de glow en haut */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 animate-gradient"></div>
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-purple-500"></div>
 
                     <div className="p-8">
                         {/* Icône de statut */}
@@ -123,14 +123,11 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                             <div className="mb-6">
                                 <div className="relative h-3 bg-gray-700 rounded-full overflow-hidden">
                                     <motion.div
-                                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600 rounded-full"
+                                        className="absolute top-0 left-0 h-full bg-purple-500 rounded-full"
                                         initial={{ width: '0%' }}
                                         animate={{ width: `${progress}%` }}
                                         transition={{ duration: 0.5, ease: 'easeOut' }}
-                                    >
-                                        {/* Effet de brillance animé */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                                    </motion.div>
+                                    />
                                 </div>
                                 <p className="text-gray-400 text-xs text-center mt-2">
                                     {Math.round(progress)}% complété
@@ -180,7 +177,7 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.5 }}
-                                className="flex items-start gap-3 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/30"
+                                className="flex items-start gap-3 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30"
                             >
                                 <Sparkles className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
                                 <p className="text-sm text-gray-300 leading-relaxed">{currentTip}</p>
@@ -195,8 +192,8 @@ export const QuizGenerationModal: React.FC<QuizGenerationModalProps> = ({
                                 transition={{ delay: 0.5 }}
                                 onClick={onClose}
                                 className={`w-full mt-6 py-3 rounded-lg font-semibold transition-all duration-200 ${status === 'success'
-                                    ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white'
-                                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white'
+                                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                                    : 'bg-red-500 hover:bg-red-600 text-white'
                                     }`}
                             >
                                 {status === 'success' ? 'Voir le quiz' : 'Réessayer'}

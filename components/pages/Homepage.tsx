@@ -62,7 +62,7 @@ const Navbar = () => {
                 <div className="hidden md:flex items-center gap-4">
                     {isAuthenticated && user ? (
                         <Link href="/dashboard" className="flex items-center group">
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
+                            <div className="w-9 h-9 rounded-full bg-purple-500 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
                                 <span className="text-xs font-bold text-white">
                                     {loading ? '...' : getInitials(user.name)}
                                 </span>
@@ -203,8 +203,8 @@ const Hero = () => {
                     transition={{ duration: 0.6 }}
                 >
                     <h1 className="text-5xl md:text-7xl font-serif font-medium text-white leading-[1.1] mb-8">
-                        L'IA qui transforme <br />
-                        <span className="text-gray-400">vos notes en succès.</span>
+                        Réussissez vos examens <br />
+                        <span className="text-purple-500">avec Braina.</span>
                     </h1>
                     <p className="text-xl text-gray-400 mb-10 max-w-lg leading-relaxed">
                         Braina utilise la puissance des IA de pointe pour générer instantanément des quiz, des flashcards et des résumés à partir de vos cours.
@@ -244,7 +244,7 @@ const FeatureCard = ({ title, description, icon: Icon }: any) => (
         <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center mb-6 text-white">
             <Icon size={24} />
         </div>
-        <h3 className="text-xl font-serif text-white mb-3">{title}</h3>
+        <h3 className="text-xl font-serif text-purple-500 mb-3">{title}</h3>
         <p className="text-gray-400 leading-relaxed">{description}</p>
     </div>
 );
@@ -286,11 +286,11 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
     return (
         <div className="border-b border-white/10">
             <button
-                className="w-full py-6 flex items-center justify-between text-left hover:text-gray-200 transition-colors"
+                className="w-full py-6 flex items-center justify-between text-left hover:text-purple-500 transition-colors"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <span className="text-lg font-medium text-white">{question}</span>
-                {isOpen ? <Minus className="text-gray-400" /> : <Plus className="text-gray-400" />}
+                {isOpen ? <Minus className="text-gray-400" /> : <Plus className="text-purple-500" />}
             </button>
             <AnimatePresence>
                 {isOpen && (
@@ -355,11 +355,11 @@ const Footer = () => {
                     <p className="text-gray-400 max-w-xs mb-8">
                         L'intelligence artificielle au service de votre réussite académique.
                     </p>
-                    <div className="flex gap-4">
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Twitter size={20} /></a>
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Github size={20} /></a>
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Linkedin size={20} /></a>
-                        <a href="#" className="text-gray-400 hover:text-white transition-colors"><Instagram size={20} /></a>
+                    <div className="flex gap-4 text-purple-500">
+                        <a href="#" className=" hover:text-white transition-colors"><Twitter size={20} /></a>
+                        <a href="#" className="hover:text-white transition-colors"><Github size={20} /></a>
+                        <a href="#" className="hover:text-white transition-colors"><Linkedin size={20} /></a>
+                        <a href="#" className="hover:text-white transition-colors"><Instagram size={20} /></a>
                     </div>
                 </div>
 
