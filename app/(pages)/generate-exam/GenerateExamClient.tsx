@@ -181,35 +181,51 @@ export default function GenerateExamClient() {
                 isExam: true, // Flag pour indiquer que c'est un examen
             };
 
-            // Envoyer au backend (Nouvelle route Exam)
-            const response = await axios.post(`${serverIp}/exam/create`, examData);
-
-            console.log('Exam creation response:', response.data);
-            setModalProgress(100);
-
-            if (response.status === 201) {
-                // Succès !
-                setModalStatus('success');
-
-                // Récupérer l'ID de l'examen créé
-                const examId = response.data?.exam?.examId || response.data?.examId;
-                console.log('Extracted examId:', examId);
-
-                // Attendre 2 secondes puis rediriger vers l'examen
-                setTimeout(() => {
-                    setIsModalOpen(false);
-                    if (examId) {
-                        // Rediriger vers l'écran d'examen (Paper UI)
-                        console.log('Redirecting to:', `/play/exam/${examId}`);
-                        router.push(`/play/exam/${examId}`);
-                    } else {
-                        // Fallback vers le dashboard si pas d'ID
-                        console.error('No examId found in response');
-                        router.push('/dashboard');
+            // Simuler une progression progressive pendant l'appel API (60-95%)
+            const progressInterval = setInterval(() => {
+                setModalProgress(prev => {
+                    if (prev < 95) {
+                        return prev + 1;
                     }
-                }, 2000);
-            } else {
-                throw new Error(response.data?.error || 'Erreur lors de la création de l\'examen');
+                    return prev;
+                });
+            }, 200); // Incrémente de 1% toutes les 200ms
+
+            try {
+                // Envoyer au backend (Nouvelle route Exam)
+                const response = await axios.post(`${serverIp}/exam/create`, examData);
+
+                clearInterval(progressInterval);
+                console.log('Exam creation response:', response.data);
+                setModalProgress(100);
+
+                if (response.status === 201) {
+                    // Succès !
+                    setModalStatus('success');
+
+                    // Récupérer l'ID de l'examen créé
+                    const examId = response.data?.exam?.examId || response.data?.examId;
+                    console.log('Extracted examId:', examId);
+
+                    // Attendre 2 secondes puis rediriger vers l'examen
+                    setTimeout(() => {
+                        setIsModalOpen(false);
+                        if (examId) {
+                            // Rediriger vers l'écran d'examen (Paper UI)
+                            console.log('Redirecting to:', `/play/exam/${examId}`);
+                            router.push(`/play/exam/${examId}`);
+                        } else {
+                            // Fallback vers le dashboard si pas d'ID
+                            console.error('No examId found in response');
+                            router.push('/dashboard');
+                        }
+                    }, 2000);
+                } else {
+                    throw new Error(response.data?.error || 'Erreur lors de la création de l\'examen');
+                }
+            } catch (apiErr: any) {
+                clearInterval(progressInterval);
+                throw apiErr; // Re-throw pour le catch externe
             }
 
         } catch (err: any) {

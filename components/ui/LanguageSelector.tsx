@@ -11,8 +11,7 @@ interface LanguageSelectorProps {
 }
 
 const availableLanguages = [
-    'Français', 'Anglais', 'Espagnol', 'Allemand', 'Italien', 'Portugais', 'Japonais', 'Chinois',
-    'Russe', 'Arabe', 'Coréen', 'Néerlandais', 'Polonais', 'Turc', 'Suédois', 'Grec', 'Hindi'
+    'Créole haitien', 'Français', 'Anglais', 'Espagnol'
 ];
 
 /**
@@ -77,8 +76,8 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ isOpen, onCl
                                         key={lang}
                                         onClick={() => handleSelect(lang)}
                                         className={`p-3 rounded-lg cursor-pointer transition-colors ${lang === language
-                                                ? 'bg-purple-600 text-white font-semibold'
-                                                : 'text-gray-200 hover:bg-gray-700'
+                                            ? 'bg-purple-600 text-white font-semibold'
+                                            : 'text-gray-200 hover:bg-gray-700'
                                             }`}
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.98 }}

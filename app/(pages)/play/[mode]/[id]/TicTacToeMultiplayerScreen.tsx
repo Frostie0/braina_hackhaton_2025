@@ -302,8 +302,12 @@ export default function TicTacToeMultiplayerScreen({
     );
 
     return () => {
-      // Ne pas déconnecter pour maintenir la session socket active lors de la navigation
-      // socketRef.current = null; // on garde la référence si nécessaire
+      // Déconnecter proprement lors du démontage du composant
+      if (socketRef.current) {
+        console.log("🔌 Disconnecting TicTacToe socket on unmount");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketBase, roomCode]);

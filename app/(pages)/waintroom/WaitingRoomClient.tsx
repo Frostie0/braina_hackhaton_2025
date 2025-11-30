@@ -194,9 +194,12 @@ export default function WaitingRoomClient() {
     socket.on("connect_error", () => setStatus("error"));
 
     return () => {
-      // Ne pas forcer la déconnexion pour conserver la session lors de la navigation
-      // socket.disconnect();
-      // socketRef.current = null;
+      // Déconnecter proprement pour éviter les fuites et la navigation fantôme
+      if (socketRef.current) {
+        console.log("🔌 Disconnecting socket on unmount");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socketBase, room, isHost]);

@@ -37,6 +37,14 @@ const maxQuestionsOptions = [
     { label: '20', value: '20' },
 ];
 
+const languages = [
+    { label: 'Créole haitien', value: 'ht' },
+    { label: 'Français', value: 'fr' },
+    { label: 'Anglais', value: 'en' },
+    { label: 'Espagnol', value: 'es' },
+];
+
+
 /**
  * Page de génération de quiz (Client Component)
  */
