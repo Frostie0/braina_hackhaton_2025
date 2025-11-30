@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, Menu, X, ArrowRight, Check, ChevronDown, Plus, Minus, Github, Twitter, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
+import { useAuth } from '@/lib/context/AuthContext';
 
 // --- Composants UI ---
 
@@ -31,8 +32,19 @@ const Button = ({ children, variant = 'primary', className = "", ...props }: any
 
 // --- Sections ---
 
+const getInitials = (name: string) => {
+    if (!name) return 'G';
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+};
+
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { user, isAuthenticated, loading } = useAuth();
 
     return (
         <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
@@ -48,14 +60,35 @@ const Navbar = () => {
                 </div>
 
                 <div className="hidden md:flex items-center gap-4">
-                    <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                        Se connecter
-                    </Link>
-                    <Link href="/register">
-                        <Button variant="primary" className="py-2 px-4 text-sm">
-                            Essayer Braina
-                        </Button>
-                    </Link>
+                    {isAuthenticated && user ? (
+                        <Link href="/dashboard" className="flex items-center group">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
+                                <span className="text-xs font-bold text-white">
+                                    {loading ? '...' : getInitials(user.name)}
+                                </span>
+                            </div>
+                            <div className="flex-1 min-w-0 hidden lg:block">
+                                <p className="text-sm font-medium text-white truncate group-hover:text-purple-200 transition-colors">
+                                    {loading ? (
+                                        'Chargement...'
+                                    ) : (
+                                        user.name
+                                    )}
+                                </p>
+                            </div>
+                        </Link>
+                    ) : (
+                        <>
+                            <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
+                                Se connecter
+                            </Link>
+                            <Link href="/register">
+                                <Button variant="primary" className="py-2 px-4 text-sm">
+                                    Essayer Braina
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -78,18 +111,85 @@ const Navbar = () => {
                             <a href="#faq" className="text-lg text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>FAQ</a>
                             <a href="#" className="text-lg text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(false)}>Tarifs</a>
                             <div className="pt-4 flex flex-col gap-3">
-                                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
-                                    <Button variant="secondary" className="w-full justify-center">Se connecter</Button>
-                                </Link>
-                                <Link href="/register" onClick={() => setIsMenuOpen(false)}>
-                                    <Button variant="primary" className="w-full justify-center">Essayer Braina</Button>
-                                </Link>
+                                {isAuthenticated && user ? (
+                                    <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                                            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-medium">
+                                                <span className="text-xs font-bold text-white">
+                                                    {loading ? '...' : getInitials(user.name)}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-white">{user.name}</p>
+                                                <p className="text-sm text-gray-400">Accéder au tableau de bord</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                                            <Button variant="secondary" className="w-full justify-center">Se connecter</Button>
+                                        </Link>
+                                        <Link href="/register" onClick={() => setIsMenuOpen(false)}>
+                                            <Button variant="primary" className="w-full justify-center">Essayer Braina</Button>
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
         </nav>
+    );
+};
+
+const HeroCarousel = () => {
+    const images = [
+        "/assets/img/create_quiz.png",
+        "/assets/img/quiz.png",
+        "/assets/img/result_quiz.png",
+        "/assets/img/winning_quiz.png"
+    ];
+
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+        }, 4000); // Change image every 4 seconds
+
+        return () => clearInterval(timer);
+    }, [images.length]);
+
+    return (
+        <div className="absolute inset-0 w-full h-full">
+            <AnimatePresence mode="wait">
+                <motion.img
+                    key={currentIndex}
+                    src={images[currentIndex]}
+                    alt={`Slide ${currentIndex + 1}`}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            </AnimatePresence>
+
+            {/* Indicators */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+                {images.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex ? "bg-white w-6" : "bg-white/40 hover:bg-white/60"
+                            }`}
+                        aria-label={`Go to slide ${index + 1}`}
+                    />
+                ))}
+            </div>
+        </div>
     );
 };
 
@@ -110,7 +210,7 @@ const Hero = () => {
                         Braina utilise la puissance des IA de pointe pour générer instantanément des quiz, des flashcards et des résumés à partir de vos cours.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
-                        <Link href="/register">
+                        <Link href="/dashboard">
                             <Button variant="primary" className="w-full sm:w-auto h-12 px-8 text-lg">
                                 Démarrer gratuitement
                             </Button>
@@ -131,25 +231,7 @@ const Hero = () => {
                     className="relative"
                 >
                     <div className="aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 shadow-2xl relative">
-                        {/* Abstract UI Representation */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-3/4 h-3/4 border border-white/5 rounded-xl bg-white/5 backdrop-blur-sm p-6 flex flex-col gap-4">
-                                <div className="h-4 w-1/3 bg-white/10 rounded-full animate-pulse" />
-                                <div className="space-y-2">
-                                    <div className="h-2 w-full bg-white/10 rounded-full" />
-                                    <div className="h-2 w-5/6 bg-white/10 rounded-full" />
-                                    <div className="h-2 w-4/6 bg-white/10 rounded-full" />
-                                </div>
-                                <div className="mt-auto flex gap-3">
-                                    <div className="h-20 w-full bg-purple-500/20 rounded-lg border border-purple-500/30 flex items-center justify-center">
-                                        <span className="text-purple-300 text-xs font-mono">Quiz Généré</span>
-                                    </div>
-                                    <div className="h-20 w-full bg-cyan-500/20 rounded-lg border border-cyan-500/30 flex items-center justify-center">
-                                        <span className="text-cyan-300 text-xs font-mono">Flashcards</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <HeroCarousel />
                     </div>
                 </motion.div>
             </div>

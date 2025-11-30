@@ -53,5 +53,5 @@ const MOCK_QUIZ = {
 };
 
 export default function QuizPage() {
-    return <QuizScreen quiz={MOCK_QUIZ} />;
+    return <QuizScreen quiz={MOCK_QUIZ} quizId="mock-quiz-id" />;
 }
