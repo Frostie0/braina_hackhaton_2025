@@ -14,16 +14,6 @@ const poppins = Poppins({
   variable: "--font-poppins", // Optionnel, si vous voulez l'utiliser via CSS
 });
 
-const lora = Lora({
-  subsets: ["latin"],
-  variable: "--font-lora",
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://braina.ai'),
@@ -73,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body
-        className={`${poppins.className} ${geistSans.variable} ${geistMono.variable} ${lora.variable} antialiased`}      >
+        className={`${poppins.className} antialiased`}>
         {children}
       </body>
     </html>

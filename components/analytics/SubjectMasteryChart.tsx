@@ -3,6 +3,7 @@
 import React from 'react';
 import { Bar, BarChart, XAxis, YAxis, LabelList, CartesianGrid } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { colors } from '@/lib/colors';
 
 interface SubjectData {
     subject: string;
@@ -17,22 +18,22 @@ interface SubjectMasteryChartProps {
 const chartConfig = {
     mastery: {
         label: "Maîtrise (%)",
-        color: "hsl(var(--chart-2))",
+        color: colors.accent,
     },
 } satisfies ChartConfig
 
 export const SubjectMasteryChart: React.FC<SubjectMasteryChartProps> = ({ data }) => {
-    // Sort by mastery descending
+    // Sort by mastery descending - use accent purple with varying opacity
     const sortedData = [...data].sort((a, b) => b.mastery - a.mastery).map(d => ({
         ...d,
-        fill: d.mastery >= 80 ? '#22c55e' : // green-500
-            d.mastery >= 50 ? '#3b82f6' : // blue-500
-                d.mastery >= 30 ? '#f97316' : // orange-500
-                    '#ef4444' // red-500
+        fill: d.mastery >= 80 ? '#8B5CF6' : // accent purple full
+            d.mastery >= 65 ? '#A78BFA' : // purple-400
+                d.mastery >= 50 ? '#C4B5FD' : // purple-300
+                    '#DDD6FE' // purple-200
     }));
 
     return (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300">
             <h3 className="text-lg font-serif font-medium text-white mb-6">Maîtrise par Matière</h3>
 
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -56,10 +57,16 @@ export const SubjectMasteryChart: React.FC<SubjectMasteryChartProps> = ({ data }
                     />
                     <XAxis dataKey="mastery" type="number" hide domain={[0, 100]} />
                     <ChartTooltip
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        content={<ChartTooltipContent hideLabel />}
+                        cursor={{
+                            fill: 'rgba(139, 92, 246, 0.1)',
+                            radius: 4
+                        }}
+                        content={<ChartTooltipContent
+                            hideLabel
+                            className="!bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-2xl shadow-purple-500/20"
+                        />}
                     />
-                    <Bar dataKey="mastery" radius={5} barSize={24}>
+                    <Bar dataKey="mastery" radius={8} barSize={24} className="transition-all duration-300">
                         <LabelList
                             dataKey="mastery"
                             position="right"

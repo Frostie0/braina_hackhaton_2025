@@ -3,6 +3,7 @@
 import React from 'react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { colors } from '@/lib/colors';
 
 interface DataPoint {
     label: string;
@@ -20,7 +21,7 @@ interface PerformanceChartProps {
 const chartConfig = {
     score: {
         label: "Score",
-        color: "hsl(var(--chart-1))",
+        color: colors.accent,
     },
 } satisfies ChartConfig
 
@@ -28,23 +29,21 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
     data,
     title,
     subtitle,
-    color = "#f97316" // Default orange-500
+    color = colors.accent // Use accent purple as default
 }) => {
-    // Transform data for Recharts if needed, but DataPoint structure is compatible
-    // We just need to ensure keys match
     const chartData = data.map(d => ({
         ...d,
-        fill: color // Allow dynamic coloring per chart instance if needed
+        fill: color
     }));
 
     return (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className=" border border-white/10 rounded-2xl p-6 transition-all duration-300">
             <div className="mb-6">
                 <h3 className="text-lg font-serif font-medium text-white">{title}</h3>
                 {subtitle && <p className="text-sm text-gray-400">{subtitle}</p>}
             </div>
 
-            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <ChartContainer config={chartConfig} className="min-h-[200px] w-full bg-none hover:bg-none">
                 <BarChart accessibilityLayer data={chartData}>
                     <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.1)" />
                     <XAxis
@@ -56,17 +55,24 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                     />
                     <YAxis
                         hide
-                        domain={[0, 20]} // Assuming scores are out of 20
+                        domain={[0, 20]}
                     />
                     <ChartTooltip
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        content={<ChartTooltipContent hideLabel />}
+                        cursor={{
+                            fill: 'rgba(139, 92, 246, 0.1)',
+                            radius: 4
+                        }}
+                        content={<ChartTooltipContent
+                            hideLabel
+                            className="!bg-gradient-to-br from-purple-500/20 to-purple-600/20 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-2xl shadow-purple-500/20"
+                        />}
                     />
                     <Bar
                         dataKey="value"
                         fill={color}
-                        radius={[4, 4, 0, 0]}
+                        radius={[8, 8, 0, 0]}
                         barSize={40}
+                        className="transition-all duration-300"
                     />
                 </BarChart>
             </ChartContainer>

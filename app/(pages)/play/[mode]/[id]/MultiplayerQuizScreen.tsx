@@ -64,6 +64,25 @@ export default function MultiplayerQuizScreen({
         }
     }, [gameRoom?.currentQuestionIndex, timePerQuestion]);
 
+    const handleOptionSelect = (option: string) => {
+        if (!hasAnswered) {
+            setSelectedOption(option);
+        }
+    };
+
+    const handleSubmit = useCallback(() => {
+        if (hasAnswered || !selectedOption || !gameRoom) return;
+
+        const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+        setHasAnswered(true);
+        submitAnswer(selectedOption, timeSpent);
+
+        // Show leaderboard after a brief moment
+        setTimeout(() => {
+            setShowLeaderboard(true);
+        }, 1500);
+    }, [hasAnswered, selectedOption, gameRoom, questionStartTime, submitAnswer]);
+
     // Timer countdown
     useEffect(() => {
         if (!gameRoom || hasAnswered || showLeaderboard || gameRoom.gameState !== 'playing') return;
@@ -79,7 +98,7 @@ export default function MultiplayerQuizScreen({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [hasAnswered, showLeaderboard, gameRoom?.gameState, gameRoom?.currentQuestionIndex]);
+    }, [hasAnswered, showLeaderboard, gameRoom?.gameState, gameRoom?.currentQuestionIndex, handleSubmit]);
 
     // Check if all players have answered
     useEffect(() => {
@@ -101,25 +120,6 @@ export default function MultiplayerQuizScreen({
             router.push(`/play/multiplayer/results/${roomCode}`);
         }
     }, [gameRoom?.gameState, roomCode, router]);
-
-    const handleOptionSelect = (option: string) => {
-        if (!hasAnswered) {
-            setSelectedOption(option);
-        }
-    };
-
-    const handleSubmit = useCallback(() => {
-        if (hasAnswered || !selectedOption || !gameRoom) return;
-
-        const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
-        setHasAnswered(true);
-        submitAnswer(selectedOption, timeSpent);
-
-        // Show leaderboard after a brief moment
-        setTimeout(() => {
-            setShowLeaderboard(true);
-        }, 1500);
-    }, [hasAnswered, selectedOption, gameRoom, questionStartTime, submitAnswer]);
 
     const handleNext = () => {
         if (!gameRoom || !isHost) return;

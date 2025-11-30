@@ -8,9 +8,10 @@ import { Quiz, SortOrder, sortQuizzes } from '@/lib/data/quiz';
 interface QuizFlatListProps {
     quizzes: Quiz[];
     title?: string;
+    maxVisible?: number; // Maximum number of quizzes to display (undefined = show all)
 }
 
-const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer l'apprentissage" }) => {
+const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer l'apprentissage", maxVisible }) => {
     const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -19,6 +20,9 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
 
     // Trier les quiz selon l'ordre sélectionné
     const sortedQuizzes = sortQuizzes(quizzes, sortOrder);
+
+    // Limiter le nombre de quiz affichés si maxVisible est défini
+    const displayedQuizzes = maxVisible ? sortedQuizzes.slice(0, maxVisible) : sortedQuizzes;
 
     // Options de tri
     const sortOptions = [
@@ -75,7 +79,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                 window.removeEventListener('resize', checkScrollability);
             };
         }
-    }, [sortedQuizzes]);
+    }, [displayedQuizzes]);
 
     return (
         <section className="mb-10">
@@ -150,7 +154,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                         scrollBehavior: 'smooth'
                     }}
                 >
-                    {sortedQuizzes.map((quiz) => (
+                    {displayedQuizzes.map((quiz) => (
                         <div key={quiz.id} className="snap-start flex-shrink-0">
                             <QuizSlideCard
                                 id={quiz.id}

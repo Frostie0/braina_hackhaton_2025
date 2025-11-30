@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
+import { colors } from '@/lib/colors';
 
 interface StatsCardProps {
     title: string;
@@ -23,25 +24,25 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     icon: Icon,
     trend,
     description,
-    color = "blue",
+    color = "purple",
     delay = 0
 }) => {
     const colorClasses = {
         blue: "bg-blue-500/10 text-blue-500 border-blue-500/20",
         green: "bg-green-500/10 text-green-500 border-green-500/20",
         orange: "bg-orange-500/10 text-orange-500 border-orange-500/20",
-        purple: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+        purple: `bg-[${colors.accent}]/10 text-[${colors.accent}] border-[${colors.accent}]/20`,
         red: "bg-red-500/10 text-red-500 border-red-500/20",
     };
 
-    const selectedColor = colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
+    const selectedColor = colorClasses[color as keyof typeof colorClasses] || colorClasses.purple;
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay }}
-            className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-colors"
+            className="bg-white/5 border border-white/10 rounded-2xl p-6 transition-all duration-300"
         >
             <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-xl ${selectedColor}`}>

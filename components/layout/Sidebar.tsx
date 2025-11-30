@@ -54,8 +54,8 @@ const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?:
 );
 
 // Composant pour un élément du menu déroulant du profil
-const ProfileMenuItem: React.FC<{ icon: React.ElementType; label: string }> = ({ icon: Icon, label }) => (
-    <div className="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors duration-200">
+const ProfileMenuItem: React.FC<{ icon: React.ElementType; label: string; onClick?: () => void }> = ({ icon: Icon, label, onClick }) => (
+    <div onClick={onClick} className="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors duration-200">
         <Icon className="w-4 h-4 mr-3" />
         <span>{label}</span>
     </div>
@@ -67,21 +67,44 @@ const dropdownVariants: Variants = {
     visible: { opacity: 1, height: "auto", y: 0, transition: { duration: 0.2 } },
 };
 
-const ProfileDropdownMenu: React.FC = () => (
-    <motion.div
-        className="absolute bottom-[70px] left-2 right-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20"
-        initial="hidden"
-        animate="visible"
-        exit="hidden"
-        variants={dropdownVariants}
-    >
-        <div className="py-1">
-            {profileMenuItems.map((item) => (
-                <ProfileMenuItem key={item.label} icon={item.icon} label={item.label} />
-            ))}
-        </div>
-    </motion.div>
-);
+const ProfileDropdownMenu: React.FC<{ onNavigate: (path: string) => void; onLogout: () => void }> = ({ onNavigate, onLogout }) => {
+    const handleMenuClick = (label: string) => {
+        switch (label) {
+            case 'Paramètres':
+                onNavigate('/settings');
+                break;
+            case 'Langue':
+                onNavigate('/language');
+                break;
+            case 'Déconnexion':
+                onLogout();
+                break;
+            default:
+                break;
+        }
+    };
+
+    return (
+        <motion.div
+            className="absolute bottom-[70px] left-2 right-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20"
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={dropdownVariants}
+        >
+            <div className="py-1">
+                {profileMenuItems.map((item) => (
+                    <ProfileMenuItem
+                        key={item.label}
+                        icon={item.icon}
+                        label={item.label}
+                        onClick={() => handleMenuClick(item.label)}
+                    />
+                ))}
+            </div>
+        </motion.div>
+    );
+};
 
 // Header de la Sidebar
 const SidebarHeader: React.FC<{ onToggle?: () => void }> = ({ onToggle }) => (
@@ -183,8 +206,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
         setIsProfileMenuOpen(prev => !prev);
     };
 
-    // ... (rest of the component)
+    const handleNavigate = (path: string) => {
+        router.push(path);
+        setIsProfileMenuOpen(false);
+        if (!isDesktop) setIsSidebarOpen(false);
+    };
 
+    const handleLogout = () => {
+        // Clear storage
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // Redirect to homepage
+        router.push('/');
+        setIsProfileMenuOpen(false);
+    };
 
     const sidebarContent = (
         <div className="flex flex-col h-full bg-black border-r border-white/10">
@@ -223,7 +259,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
             {/* Footer Profil */}
             <div className="relative mt-auto">
                 <AnimatePresence>
-                    {isProfileMenuOpen && <ProfileDropdownMenu />}
+                    {isProfileMenuOpen && <ProfileDropdownMenu onNavigate={handleNavigate} onLogout={handleLogout} />}
                 </AnimatePresence>
                 <UserProfileFooter
                     onClick={toggleProfileMenu}

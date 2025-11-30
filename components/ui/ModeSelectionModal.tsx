@@ -31,27 +31,27 @@ export default function ModeSelectionModal({
             title: 'Quiz',
             description: 'Testez vos connaissances',
             icon: <Brain className="w-6 h-6" />,
-            color: 'text-white',
-            bgColor: 'bg-gray-200',
-            borderColor: 'border-gray-300 hover:border-gray-400'
+            color: 'text-purple-400',
+            bgColor: 'bg-purple-500/10',
+            borderColor: 'border-purple-500/30 hover:border-purple-500/60'
         },
         {
             id: 'flashcards',
             title: 'Flashcards',
             description: 'Renforcez les concepts clés',
             icon: <Layers className="w-6 h-6" />,
-            color: 'text-white',
-            bgColor: 'bg-gray-200',
-            borderColor: 'border-gray-300 hover:border-gray-400'
+            color: 'text-cyan-400',
+            bgColor: 'bg-cyan-500/10',
+            borderColor: 'border-cyan-500/30 hover:border-cyan-500/60'
         },
         {
             id: 'multiplayer',
             title: 'Multijoueur',
             description: 'Défiez vos amis',
             icon: <Users className="w-6 h-6" />,
-            color: 'text-white',
-            bgColor: 'bg-gray-200',
-            borderColor: 'border-gray-300 hover:border-gray-400'
+            color: 'text-green-400',
+            bgColor: 'bg-green-500/10',
+            borderColor: 'border-green-500/30 hover:border-green-500/60'
         }
     ];
 
@@ -99,14 +99,14 @@ export default function ModeSelectionModal({
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             className={`w-full p-4 rounded-xl border-2 ${mode.borderColor} ${mode.bgColor} 
-                                                transition-all duration-200 text-left group`}
+                                                transition-all duration-200 text-left group hover:bg-opacity-20`}
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className={`${mode.color} ${mode.bgColor} p-3 rounded-lg`}>
+                                                <div className={`${mode.color} p-3 rounded-lg bg-white/5`}>
                                                     {mode.icon}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h4 className={`font-semibold ${mode.color} text-base mb-0.5`}>
+                                                    <h4 className={`font-semibold text-white text-base mb-0.5`}>
                                                         {mode.title}
                                                     </h4>
                                                     <p className="text-gray-400 text-sm">

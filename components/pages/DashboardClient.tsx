@@ -100,6 +100,7 @@ export default function DashboardClient() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
     const [isClient, setIsClient] = useState(false);
+    const [showAllQuizzes, setShowAllQuizzes] = useState(false);
 
     // États pour les données du backend
     const [user, setUser] = useState<User | null>(null);
@@ -289,7 +290,14 @@ export default function DashboardClient() {
                     <section>
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-serif font-medium text-white">Vos activités récentes</h2>
-                            <button className="text-sm text-gray-400 hover:text-white transition-colors">Voir tout</button>
+                            {quizzes.length > 5 && (
+                                <button
+                                    onClick={() => setShowAllQuizzes(!showAllQuizzes)}
+                                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                                >
+                                    {showAllQuizzes ? 'Voir moins' : 'Voir tout'}
+                                </button>
+                            )}
                         </div>
 
                         {isLoadingQuizzes ? (
@@ -300,7 +308,7 @@ export default function DashboardClient() {
                                 </div>
                             </div>
                         ) : quizzes.length > 0 ? (
-                            <QuizFlatList quizzes={quizzes} title="" />
+                            <QuizFlatList quizzes={quizzes} title="" maxVisible={showAllQuizzes ? undefined : 5} />
                         ) : (
                             <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/5">
                                 <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 text-gray-500">

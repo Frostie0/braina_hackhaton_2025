@@ -454,7 +454,7 @@ export default function QuizDetailsPage() {
                         {/* Bouton d'action principal */}
                         <button
                             onClick={() => setIsModeSelectionOpen(true)}
-                            className="w-full py-4 bg-white hover:bg-gray-200 text-black font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-purple-600 hover:bg-purple-700 cursor-pointer text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
                         >
                             <PlayCircle className="w-5 h-5" />
                             Commencer le Quiz
