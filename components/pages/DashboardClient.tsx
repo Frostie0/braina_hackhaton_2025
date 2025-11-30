@@ -10,6 +10,7 @@ import { Sidebar } from '../layout/Sidebar';
 import { RightPanel, RightPanelMobile } from '../layout/RightPanel';
 import { QuickStartCard } from '../ui/QuickStartCard';
 import QuizFlatList from '../ui/QuizFlatList';
+import ExamsList from '../ui/ExamsList';
 import Link from 'next/link';
 import axios from 'axios';
 import { serverIp } from '@/lib/serverIp';
@@ -115,6 +116,8 @@ export default function DashboardClient() {
     const [quizzes, setQuizzes] = useState<FrontendQuiz[]>([]);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+    const [isLoadingExams, setIsLoadingExams] = useState(true);
+    const [exams, setExams] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     // Fonction pour récupérer les données utilisateur
@@ -157,6 +160,28 @@ export default function DashboardClient() {
         }
     };
 
+    const handleExamDeleted = (deletedId: string) => {
+        setExams(prev => prev.filter(e => e.examId !== deletedId));
+    };
+
+    // Fonction pour récupérer les examens de l'utilisateur
+    const fetchUserExams = async (userId: string) => {
+        try {
+            setIsLoadingExams(true);
+            const response = await axios.get(`${serverIp}/exam/user/${userId}`);
+
+            if (response.status === 200) {
+                setExams(response.data.exams);
+                console.log('✅ Examens récupérés:', response.data.count, 'examen(s) trouvé(s)');
+            }
+        } catch (error: any) {
+            console.error('❌ Erreur lors de la récupération des examens:', error);
+            // Ne pas définir error ici pour ne pas gêner l'affichage des quiz
+        } finally {
+            setIsLoadingExams(false);
+        }
+    };
+
     useEffect(() => {
         // 1. Définir que nous sommes montés sur le client
         setIsClient(true);
@@ -168,6 +193,7 @@ export default function DashboardClient() {
             // 3. Charger les données depuis le backend
             fetchUserData(userId);
             fetchUserQuizzes(userId);
+            fetchUserExams(userId);
         } else {
             console.warn('⚠️ Aucun userId trouvé dans localStorage');
             setError('Utilisateur non connecté');
@@ -332,6 +358,16 @@ export default function DashboardClient() {
                             </div>
                         )}
                     </section>
+
+                    {/* SECTION: EXAMENS BLANCS */}
+                    {!isLoadingExams && exams.length > 0 && (
+                        <section className="mt-12">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-xl font-serif font-medium text-white">Vos examens blancs</h2>
+                            </div>
+                            <ExamsList exams={exams} onDelete={handleExamDeleted} />
+                        </section>
+                    )}
 
                     {/* Panneau de droite sur Mobile (affiché en bas du contenu) */}
                     <div className="mt-12 lg:hidden">

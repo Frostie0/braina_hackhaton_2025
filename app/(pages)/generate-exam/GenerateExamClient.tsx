@@ -23,27 +23,35 @@ const difficultyOptions = [
 
 // Options de niveau scolaire
 const levelOptions = [
-    { label: '9ème Année Fondamentale', value: '9eme_fondamentale' },
-    { label: 'BACC (Baccalauréat)', value: 'bacc' },
-    { label: 'PHILO (Philosophie)', value: 'philo' },
+    { label: '9ème Année Fondamentale', value: '9eme_bac' },
+    { label: 'Ns4 (Baccalauréat)', value: 'nsa_bac' },
+    { label: 'Universitaire', value: 'universitaire' },
 ];
 
 // Options de matières (adaptées pour le mode examen)
-const subjectOptions = [
-    { label: 'Mathématiques', value: 'mathematics' },
-    { label: 'Physique-Chimie', value: 'physics_chemistry' },
-    { label: 'SVT (Biologie)', value: 'biology' },
-    { label: 'Histoire-Géographie', value: 'history_geography' },
-    { label: 'Français', value: 'french' },
-    { label: 'Philosophie', value: 'philosophy' },
-    { label: 'Anglais', value: 'english' },
-    { label: 'Sciences Économiques', value: 'economics' },
-    { label: 'Informatique', value: 'computer_science' },
-    { label: 'Autre', value: 'other' },
+interface SubjectOption {
+    label: string;
+    value: string;
+    levels: string[]; // IDs des niveaux autorisés
+    available: boolean;
+}
+
+const subjectOptions: SubjectOption[] = [
+    // { label: 'Mathématiques', value: 'mathematics', levels: ['9eme_bac', 'nsa_bac', 'universitaire'], available: false },
+    // { label: 'Physique-Chimie', value: 'physics_chemistry', levels: ['9eme_bac', 'nsa_bac', 'universitaire'], available: true },
+    { label: 'SVT (Biologie)', value: 'biology', levels: ['9eme_bac', 'nsa_bac', 'universitaire'], available: true },
+    // { label: 'Histoire-Géographie', value: 'history_geography', levels: ['9eme_bac', 'nsa_bac'], available: false },
+    // { label: 'Français', value: 'french', levels: ['9eme_bac', 'nsa_bac'], available: false },
+    // { label: 'Philosophie', value: 'philosophy', levels: ['nsa_bac', 'universitaire'], available: false },
+    // { label: 'Anglais', value: 'english', levels: ['9eme_bac', 'nsa_bac', 'universitaire'], available: false },
+    // { label: 'Sciences Économiques', value: 'economics', levels: ['nsa_bac', 'universitaire'], available: false }, // Coming soon
+    // { label: 'Informatique', value: 'computer_science', levels: ['nsa_bac', 'universitaire'], available: false }, // Coming soon
+    { label: 'Espagnol', value: 'spanish', levels: ['9eme_bac'], available: true }, // Coming soon
+    // { label: 'Autre', value: 'other', levels: ['9eme_bac', 'nsa_bac', 'universitaire'], available: false },
 ];
 
 type Difficulty = 'easy' | 'medium' | 'hard';
-type Level = '9eme_fondamentale' | 'bacc' | 'philo';
+type Level = '9eme_bac' | 'nsa_bac' | 'universitaire';
 
 /**
  * Page de génération d'examen blanc (Client Component)
@@ -53,7 +61,7 @@ export default function GenerateExamClient() {
 
     // États pour les paramètres de l'examen
     const [difficulty, setDifficulty] = useState<Difficulty>('medium');
-    const [level, setLevel] = useState<Level>('bacc'); // Par défaut BACC
+    const [level, setLevel] = useState<Level>('9eme_bac'); // Par défaut BACC
     const [subject, setSubject] = useState<string>('');
     const [files, setFiles] = useState<File[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -173,26 +181,30 @@ export default function GenerateExamClient() {
                 isExam: true, // Flag pour indiquer que c'est un examen
             };
 
-            // Envoyer au backend
-            const response = await axios.post(`${serverIp}/quiz/create`, examData);
+            // Envoyer au backend (Nouvelle route Exam)
+            const response = await axios.post(`${serverIp}/exam/create`, examData);
 
+            console.log('Exam creation response:', response.data);
             setModalProgress(100);
 
             if (response.status === 201) {
                 // Succès !
                 setModalStatus('success');
 
-                // Récupérer l'ID du quiz créé
-                const quizId = response.data?.quiz?._id || response.data?._id;
+                // Récupérer l'ID de l'examen créé
+                const examId = response.data?.exam?.examId || response.data?.examId;
+                console.log('Extracted examId:', examId);
 
                 // Attendre 2 secondes puis rediriger vers l'examen
                 setTimeout(() => {
                     setIsModalOpen(false);
-                    if (quizId) {
-                        // Rediriger vers l'écran d'examen
-                        router.push(`/play/exam/${quizId}`);
+                    if (examId) {
+                        // Rediriger vers l'écran d'examen (Paper UI)
+                        console.log('Redirecting to:', `/play/exam/${examId}`);
+                        router.push(`/play/exam/${examId}`);
                     } else {
                         // Fallback vers le dashboard si pas d'ID
+                        console.error('No examId found in response');
                         router.push('/dashboard');
                     }
                 }, 2000);
@@ -289,35 +301,39 @@ export default function GenerateExamClient() {
 
                         {/* Carrousel des fichiers uploadés */}
                         {files.length > 0 && (
-                            <div className="relative mt-6">
+                            <div className="relative mt-6 group/slider">
+                                {/* Bouton gauche */}
                                 <motion.button
-                                    type="button"
-                                    onClick={() => scrollSlider('left')}
-                                    className="absolute -left-3 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black/80 rounded-full text-white hover:bg-white/10 transition hidden lg:flex items-center justify-center border border-white/20 backdrop-blur-sm"
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
+                                    onClick={() => scrollSlider('left')}
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-8 h-8 rounded-full bg-black/50 border border-white/20 flex items-center justify-center text-white opacity-0 group-hover/slider:opacity-100 transition-opacity disabled:opacity-0"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </motion.button>
 
+                                {/* Liste des fichiers */}
                                 <div
                                     ref={sliderRef}
-                                    className="flex overflow-x-auto space-x-3 pb-4 pt-2 scrollbar-hide"
-                                    style={{ WebkitOverflowScrolling: 'touch' }}
+                                    className="flex gap-4 overflow-x-auto py-3 px-2 scrollbar-hide snap-x"
+                                    style={{ scrollBehavior: 'smooth' }}
                                 >
                                     {files.map((file, index) => (
-                                        <FilePreviewItem
-                                            key={`${file.name}-${index}`}
-                                            file={file}
-                                            onRemove={() => handleRemoveFile(file.name)}
-                                        />
+                                        <div key={`${file.name}-${index}`} className="snap-center shrink-0">
+                                            <FilePreviewItem
+                                                file={file}
+                                                onRemove={() => handleRemoveFile(file.name)}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
 
+                                {/* Bouton droite */}
                                 <motion.button
-                                    type="button"
-                                    onClick={() => scrollSlider('right')}
-                                    className="absolute -right-3 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black/80 rounded-full text-white hover:bg-white/10 transition hidden lg:flex items-center justify-center border border-white/20 backdrop-blur-sm"
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
+                                    onClick={() => scrollSlider('right')}
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-8 h-8 rounded-full bg-black/50 border border-white/20 flex items-center justify-center text-white opacity-0 group-hover/slider:opacity-100 transition-opacity"
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </motion.button>
