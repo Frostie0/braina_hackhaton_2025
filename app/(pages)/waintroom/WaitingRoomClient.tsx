@@ -111,13 +111,18 @@ export default function WaitingRoomClient() {
     socketRef.current = socket;
 
     socket.on("connect", () => {
+      console.log("✅ Socket connected:", socket.id);
       setStatus("connected");
       // Identité persistante
       const userId = getUserId();
       const userName = getUserName();
+      console.log(`📤 Joining game - Room: ${room}, User: ${userId} (${userName}), IsHost: ${isHost}`);
       socket.emit("join_game", { gameCode: room, userId, userName, isHost });
-      // Demander l'état courant (players, state)
-      socket.emit("request_state", { gameCode: room });
+      // Demander l'état courant (players, state) après un petit délai pour s'assurer que join_game est traité
+      setTimeout(() => {
+        console.log(`📤 Requesting state for room: ${room}`);
+        socket.emit("request_state", { gameCode: room });
+      }, 300);
     });
 
     socket.on("connect_error", (err) => {
@@ -136,21 +141,26 @@ export default function WaitingRoomClient() {
     socket.on(
       "player_joined",
       (payload: { players: Array<{ userId: string; userName: string }> }) => {
+        console.log("📥 player_joined event received:", payload);
         const mapped = (payload?.players || []).map((p) => ({
           id: p.userId,
           name: p.userName,
         }));
+        console.log("👥 Players updated:", mapped);
         setPlayers(mapped);
       }
     );
 
     socket.on("game_state", (game: SocketGameState & { gameState?: string }) => {
+      console.log("📥 game_state event received:", game);
       const mapped = (game?.players || [])
         .filter((p) => p.isConnected)
         .map((p) => ({ id: p.userId, name: p.userName }));
+      console.log("👥 Players from game_state (connected only):", mapped);
       setPlayers(mapped);
       // Fallback navigation: si l'état passe à 'playing', naviguer tous ensemble
       if (game?.gameState === "playing") {
+        console.log("🎮 Game state changed to 'playing', navigating...");
         const currentQuizId = quizIdRef.current;
         if (currentQuizId) {
           const query = new URLSearchParams({
