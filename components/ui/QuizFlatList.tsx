@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import QuizSlideCard from './QuizSlideCard';
 import { Quiz, SortOrder, sortQuizzes } from '@/lib/data/quiz';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 interface QuizFlatListProps {
     quizzes: Quiz[];
@@ -17,6 +18,7 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const { theme } = useTheme();
 
     // Trier les quiz selon l'ordre sélectionné
     const sortedQuizzes = sortQuizzes(quizzes, sortOrder);
@@ -84,14 +86,15 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
     return (
         <section className="mb-10">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
+                <h2 className="text-xl font-semibold" style={{ color: theme.text }}>{title}</h2>
 
                 <div className="flex items-center gap-2">
                     {/* Dropdown de tri */}
                     <div className="relative">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm transition-colors"
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                            style={{ backgroundColor: theme.cardBg, color: theme.text }}
                         >
                             <ArrowUpDown className="w-4 h-4" />
                             <span className="hidden sm:inline">{currentSortLabel}</span>
@@ -99,13 +102,16 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
 
                         {/* Menu déroulant */}
                         {isDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-xl border border-gray-600 z-10">
+                            <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl border z-10" style={{ backgroundColor: theme.cardBg, borderColor: theme.gray2 }}>
                                 {sortOptions.map((option) => (
                                     <button
                                         key={option.value}
                                         onClick={() => handleSortChange(option.value)}
-                                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-600 transition-colors first:rounded-t-lg last:rounded-b-lg ${sortOrder === option.value ? 'bg-purple-600 text-white' : 'text-gray-300'
-                                            }`}
+                                        className={`w-full text-left px-4 py-2 text-sm transition-colors first:rounded-t-lg last:rounded-b-lg`}
+                                        style={{
+                                            backgroundColor: sortOrder === option.value ? theme.accent : 'transparent',
+                                            color: sortOrder === option.value ? theme.white : theme.text
+                                        }}
                                     >
                                         {option.label}
                                     </button>
@@ -127,7 +133,8 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                 {canScrollLeft && (
                     <button
                         onClick={() => scroll('left')}
-                        className="lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
+                        className="lg:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 border"
+                        style={{ backgroundColor: theme.cardBg, borderColor: theme.gray2, color: theme.text }}
                         aria-label="Défiler vers la gauche"
                     >
                         <ChevronLeft className="w-6 h-6" />
@@ -138,7 +145,8 @@ const QuizFlatList: React.FC<QuizFlatListProps> = ({ quizzes, title = "Continuer
                 {canScrollRight && (
                     <button
                         onClick={() => scroll('right')}
-                        className="lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center bg-gray-800/90 hover:bg-purple-600 text-white rounded-full shadow-lg transition-all duration-200 border border-gray-600"
+                        className="lg:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full shadow-lg transition-all duration-200 border"
+                        style={{ backgroundColor: theme.cardBg, borderColor: theme.gray2, color: theme.text }}
                         aria-label="Défiler vers la droite"
                     >
                         <ChevronRight className="w-6 h-6" />

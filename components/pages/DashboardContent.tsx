@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Zap, Mic, BookOpen, Menu, Globe, ScrollText, Plus, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import axios from 'axios';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import { getUserId } from '@/lib/storage/userStorage';
 import { Quiz as FrontendQuiz } from '@/lib/data/quiz';
 

@@ -11,7 +11,7 @@ interface LanguageSelectorProps {
 }
 
 const availableLanguages = [
-    'Créole haitien', 'Français', 'Anglais', 'Espagnol'
+    'Français','Créole haitien','Anglais', 'Espagnol'
 ];
 
 /**

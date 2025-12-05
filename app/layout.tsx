@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Poppins, Lora } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/context/AuthContext";
+import { ThemeProvider } from "@/lib/context/ThemeContext";
 import AppGuard from "./AppGuard";
 
 const geistSans = Geist({
@@ -76,7 +77,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${poppins.className} antialiased`}>
         <AuthProvider>
-          <AppGuard>{children}</AppGuard>
+          <ThemeProvider>
+            <AppGuard>{children}</AppGuard>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

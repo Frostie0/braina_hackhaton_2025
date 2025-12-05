@@ -3,11 +3,12 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import { getUserId } from '@/lib/storage/userStorage';
-import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut, TrendingUp } from 'lucide-react';
+import { Home, Zap, MessageSquare, Award, Folder, Plus, ChevronDown, Bell, Search, BookOpen, X, Globe, User, Settings, Upload, CreditCard, LifeBuoy, LogOut, TrendingUp, Sun, Moon } from 'lucide-react';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 // Interfaces
 interface User {
@@ -31,40 +32,44 @@ const mainNavItems: NavItem[] = [
 
 const profileMenuItems: NavItem[] = [
     { icon: Settings, label: 'Paramètres' },
-    // { icon: User, label: 'Personnalisation' },
-    // { icon: Upload, label: 'Mes Uploads' },
-    // { icon: CreditCard, label: 'Abonnement' },
     { icon: Globe, label: 'Langue' },
-    // { icon: LifeBuoy, label: 'Support' },
     { icon: LogOut, label: 'Déconnexion' },
 ];
 
 // Sous-composant pour un élément de la barre latérale
-const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?: boolean; onClick?: () => void }> = ({ icon: Icon, label, isActive, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
-            ? 'bg-white/10 text-white font-medium'
-            : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-    >
-        <Icon className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-purple-400' : 'text-gray-500 group-hover:text-gray-300'}`} />
-        <span className="text-sm tracking-wide">{label}</span>
-    </div>
-);
+const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?: boolean; onClick?: () => void }> = ({ icon: Icon, label, isActive, onClick }) => {
+    const { theme } = useTheme();
+    return (
+        <div
+            onClick={onClick}
+            className={`flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group`}
+            style={{
+                backgroundColor: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                color: isActive ? theme.white : theme.gray
+            }}
+        >
+            <Icon
+                className={`w-5 h-5 mr-3 transition-colors`}
+                style={{ color: isActive ? theme.accent : theme.gray }}
+            />
+            <span className="text-sm tracking-wide">{label}</span>
+        </div>
+    );
+};
 
-// Composant pour un élément du menu déroulant du profil
 const ProfileMenuItem: React.FC<{ icon: React.ElementType; label: string; onClick?: () => void }> = ({ icon: Icon, label, onClick }) => (
-    <div onClick={onClick} className="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors duration-200">
-        <Icon className="w-4 h-4 mr-3" />
-        <span>{label}</span>
+    <div
+        className="flex items-center px-4 py-2.5 hover:bg-white/10 cursor-pointer transition-colors group"
+        onClick={onClick}
+    >
+        <Icon className="w-4 h-4 mr-3 text-gray-400 group-hover:text-white transition-colors" />
+        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
     </div>
 );
 
-// Composant du Menu Déroulant du Profil avec animation
 const dropdownVariants: Variants = {
-    hidden: { opacity: 0, height: 0, y: 5, transition: { duration: 0.2 } },
-    visible: { opacity: 1, height: "auto", y: 0, transition: { duration: 0.2 } },
+    hidden: { opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.2 } },
+    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.2 } },
 };
 
 const ProfileDropdownMenu: React.FC<{ onNavigate: (path: string) => void; onLogout: () => void }> = ({ onNavigate, onLogout }) => {
@@ -133,6 +138,8 @@ interface SidebarProps {
 
 // Composant UserProfileFooter
 const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean; user: User | null; isLoading: boolean }> = ({ onClick, isMenuOpen, user, isLoading }) => {
+    const { theme } = useTheme();
+
     // Get initials
     const getInitials = (name: string) => {
         return name
@@ -154,7 +161,7 @@ const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean; us
                 </span>
             </div>
             <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate group-hover:text-purple-200 transition-colors">
+                <p className="text-sm font-medium truncate group-hover:text-purple-200 transition-colors" style={{ color: theme.text }}>
                     {isLoading ? (
                         'Chargement...'
                     ) : user ? (
@@ -163,24 +170,22 @@ const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean; us
                         'Invité'
                     )}
                 </p>
-                <p className="text-xs text-gray-500 truncate">Compte & paramètres</p>
+                <p className="text-xs truncate" style={{ color: theme.gray }}>Compte & paramètres</p>
             </div>
             <motion.div animate={{ rotate: isMenuOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronDown className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
+                <ChevronDown className="w-4 h-4 group-hover:text-gray-300" style={{ color: theme.gray }} />
             </motion.div>
         </div>
     );
 };
 
-// ... (SidebarHeader and variants code)
-
 export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen, isDesktop }) => {
-
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [isLoadingUser, setIsLoadingUser] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
+    const { theme } = useTheme();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -223,7 +228,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
     };
 
     const sidebarContent = (
-        <div className="flex flex-col h-full bg-black border-r border-white/10">
+        <div className="flex flex-col h-full border-r" style={{ backgroundColor: theme.background, borderColor: theme.gray2 }}>
             {/* Header */}
             <SidebarHeader onToggle={() => setIsSidebarOpen(false)} />
 
@@ -258,6 +263,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
 
             {/* Footer Profil */}
             <div className="relative mt-auto">
+
                 <AnimatePresence>
                     {isProfileMenuOpen && <ProfileDropdownMenu onNavigate={handleNavigate} onLogout={handleLogout} />}
                 </AnimatePresence>

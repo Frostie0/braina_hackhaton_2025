@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { colors } from "@/lib/colors";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 import { getUserId } from "@/lib/storage/userStorage";
 
 interface QuizData {

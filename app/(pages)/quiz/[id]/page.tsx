@@ -7,7 +7,7 @@ import { X, Share2, Trash2, Clock, HelpCircle, PlayCircle, Award, MoreVertical, 
 import Link from 'next/link';
 import axios from 'axios';
 import { shuffle } from '@/lib/shuffle';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import ConfirmationModal from '@/components/ui/ConfirmationModal';
 import ModeSelectionModal from '@/components/ui/ModeSelectionModal';
 import GamePreferencesModal, { GamePreferences } from '@/components/ui/GamePreferencesModal';

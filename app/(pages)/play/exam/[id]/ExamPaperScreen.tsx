@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Printer, CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 
 interface Question {
     number: string;
@@ -198,8 +198,8 @@ export default function ExamPaperScreen({ exam }: ExamPaperScreenProps) {
                                                                 onChange={(e) => handleAnswerChange(uniqueId, e.target.value)}
                                                                 placeholder="Écrivez votre réponse ici..."
                                                                 className={`w-full min-h-[150px] p-3 border-2 rounded-lg bg-gray-50 focus:bg-white transition-colors resize-y font-serif text-sm leading-relaxed ${feedback
-                                                                        ? feedback.isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
-                                                                        : 'border-gray-200 focus:border-black outline-none'
+                                                                    ? feedback.isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'
+                                                                    : 'border-gray-200 focus:border-black outline-none'
                                                                     }`}
                                                                 readOnly={!!correction}
                                                             />
@@ -210,8 +210,8 @@ export default function ExamPaperScreen({ exam }: ExamPaperScreenProps) {
                                                                 onChange={(e) => handleAnswerChange(uniqueId, e.target.value)}
                                                                 placeholder="Votre réponse..."
                                                                 className={`w-full p-2 border-b-2 bg-transparent transition-colors font-serif ${feedback
-                                                                        ? feedback.isCorrect ? 'border-green-500 text-green-700' : 'border-red-500 text-red-700'
-                                                                        : 'border-gray-300 focus:border-black outline-none'
+                                                                    ? feedback.isCorrect ? 'border-green-500 text-green-700' : 'border-red-500 text-red-700'
+                                                                    : 'border-gray-300 focus:border-black outline-none'
                                                                     }`}
                                                                 readOnly={!!correction}
                                                             />
@@ -223,8 +223,8 @@ export default function ExamPaperScreen({ exam }: ExamPaperScreenProps) {
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: 'auto' }}
                                                                 className={`mt-2 p-3 rounded-lg text-sm border ${feedback.isCorrect
-                                                                        ? 'bg-green-100 border-green-200 text-green-800'
-                                                                        : 'bg-red-50 border-red-200 text-red-800'
+                                                                    ? 'bg-green-100 border-green-200 text-green-800'
+                                                                    : 'bg-red-50 border-red-200 text-red-800'
                                                                     }`}
                                                             >
                                                                 <div className="flex justify-between font-bold mb-1">

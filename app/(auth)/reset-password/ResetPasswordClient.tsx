@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 

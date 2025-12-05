@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 
 interface Question {
   id: string;
@@ -210,7 +210,7 @@ export default function TicTacToeMultiplayerScreen({
       return httpUrl.replace(/\/?api\/.*/i, "").replace(/\/$/, "");
     }
   };
-  const socketBase = useMemo(() => getServerBaseUrl(serverIp), []);
+  const socketBase = useMemo(() => getServerBaseUrl(serverIp || ""), []);
 
   const getUserId = (): string => {
     if (typeof window === "undefined") return "";

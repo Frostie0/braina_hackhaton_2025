@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Calendar, ChevronRight, Filter, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import axios from 'axios';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 
 interface Exam {
   examId: string;

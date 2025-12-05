@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Users, Copy, Check, PlayCircle, LogOut, Link2 } from "lucide-react";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 import { io, Socket } from "socket.io-client";
 import axios from "axios";
 

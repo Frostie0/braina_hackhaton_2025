@@ -1,6 +1,6 @@
 import React from "react";
 import ExamPaperScreen from "./ExamPaperScreen";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 
 async function getExam(examId: string) {
     try {

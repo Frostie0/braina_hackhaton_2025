@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import axios from "axios";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 import { saveUserData, saveAuthTokens } from "@/lib/storage/userStorage";
 import ApplicationLogo from "@/components/ui/ApplicationLogo";
 import { useAuth } from "@/lib/context/AuthContext";

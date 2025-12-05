@@ -11,7 +11,7 @@ import { FormError } from '@/components/ui/FormError';
 import { FilePreviewItem } from '@/components/ui/FilePreviewItem';
 import { QuizGenerationModal } from '@/components/ui/QuizGenerationModal';
 import { extractTextFromMultipleImages, filterValidImages } from '@/lib/services/gemini.service';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import { getUserId } from '@/lib/storage/userStorage';
 
 // Options pour les sélecteurs

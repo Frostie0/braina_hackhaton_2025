@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Zap, Mic, BookOpen, Menu, Globe, ScrollText, Plus, TrendingUp } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
+import { useTheme } from '@/lib/context/ThemeContext';
 
 import { Sidebar } from '../layout/Sidebar';
 import { RightPanel, RightPanelMobile } from '../layout/RightPanel';
@@ -13,7 +14,7 @@ import QuizFlatList from '../ui/QuizFlatList';
 import ExamsList from '../ui/ExamsList';
 import Link from 'next/link';
 import axios from 'axios';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import { getUserId } from '@/lib/storage/userStorage';
 import { Quiz as FrontendQuiz } from '@/lib/data/quiz';
 
@@ -110,6 +111,7 @@ export default function DashboardClient() {
     const [isDesktop, setIsDesktop] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [showAllQuizzes, setShowAllQuizzes] = useState(false);
+    const { theme } = useTheme();
 
     // États pour les données du backend
     const [user, setUser] = useState<User | null>(null);
@@ -219,7 +221,7 @@ export default function DashboardClient() {
     }, []); // [] garantit que cela ne s'exécute qu'une fois au montage
 
     return (
-        <div className="flex h-screen bg-black text-white overflow-hidden font-sans">
+        <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: theme.background, color: theme.text }}>
 
             {/* Utiliser AnimatePresence pour le menu mobile et l'overlay */}
             <AnimatePresence initial={false}>
@@ -254,7 +256,7 @@ export default function DashboardClient() {
             <div className="flex-1 flex flex-col overflow-y-auto">
 
                 {/* Topbar Mobile (Menu Hamburger & Logo) */}
-                <header className="flex lg:hidden items-center justify-between p-4 bg-black border-b border-white/10 sticky top-0 z-30">
+                <header className="flex lg:hidden items-center justify-between p-4 border-b sticky top-0 z-30" style={{ backgroundColor: theme.background, borderColor: theme.gray2 }}>
                     <div className="flex items-center">
                         <ApplicationLogo size={24} />
                     </div>
@@ -272,7 +274,7 @@ export default function DashboardClient() {
 
                     {/* Titre d'accueil */}
                     <div className="mb-12">
-                        <h1 className="text-3xl md:text-4xl font-serif font-medium text-white mb-2">
+                        <h1 className="text-3xl md:text-4xl font-serif font-medium mb-2" style={{ color: theme.text }}>
                             {isLoadingUser ? (
                                 'Bonjour...'
                             ) : user ? (
@@ -281,7 +283,7 @@ export default function DashboardClient() {
                                 'Bonjour'
                             )}
                         </h1>
-                        <p className="text-gray-400 text-lg">Prêt à apprendre quelque chose de nouveau aujourd'hui ?</p>
+                        <p className="text-lg" style={{ color: theme.gray }}>Prêt à apprendre quelque chose de nouveau aujourd'hui ?</p>
                     </div>
 
                     {/* Message d'erreur */}
@@ -294,7 +296,7 @@ export default function DashboardClient() {
                     {/* Section Quick Start */}
                     <section className="mb-16">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-serif font-medium text-white">Démarrage rapide</h2>
+                            <h2 className="text-xl font-serif font-medium" style={{ color: theme.text }}>Démarrage rapide</h2>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <Link href='/generate-quiz'>
@@ -323,11 +325,12 @@ export default function DashboardClient() {
                     {/* SECTION: CONTINUER L'APPRENTISSAGE (Quiz FlatList avec données dynamiques) */}
                     <section>
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-serif font-medium text-white">Vos activités récentes</h2>
+                            <h2 className="text-xl font-serif font-medium" style={{ color: theme.text }}>Vos activités récentes</h2>
                             {quizzes.length > 5 && (
                                 <button
                                     onClick={() => setShowAllQuizzes(!showAllQuizzes)}
-                                    className="text-sm text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                                    className="text-sm transition-colors font-medium"
+                                    style={{ color: theme.accent }}
                                 >
                                     {showAllQuizzes ? 'Voir moins' : 'Voir tout'}
                                 </button>
@@ -335,7 +338,7 @@ export default function DashboardClient() {
                         </div>
 
                         {isLoadingQuizzes ? (
-                            <div className="flex items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl">
+                            <div className="flex items-center justify-center py-20 border border-dashed rounded-2xl" style={{ borderColor: theme.gray2 }}>
                                 <div className="flex flex-col items-center">
                                     <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
                                     <p className="text-gray-500 text-sm">Chargement de vos quiz...</p>
@@ -344,14 +347,14 @@ export default function DashboardClient() {
                         ) : quizzes.length > 0 ? (
                             <QuizFlatList quizzes={quizzes} title="" maxVisible={showAllQuizzes ? undefined : 5} />
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/5">
-                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 text-gray-500">
+                            <div className="flex flex-col items-center justify-center py-20 border border-dashed rounded-2xl" style={{ borderColor: theme.gray2, backgroundColor: theme.cardBg }}>
+                                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: theme.background, color: theme.gray }}>
                                     <Plus className="w-6 h-6" />
                                 </div>
-                                <p className="text-gray-400 font-medium mb-1">Aucune activité pour le moment</p>
-                                <p className="text-gray-500 text-sm mb-6">Créez votre premier quiz pour commencer votre apprentissage.</p>
+                                <p className="font-medium mb-1" style={{ color: theme.gray }}>Aucune activité pour le moment</p>
+                                <p className="text-sm mb-6" style={{ color: theme.gray }}>Créez votre premier quiz pour commencer votre apprentissage.</p>
                                 <Link href='/generate-quiz'>
-                                    <button className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                    <button className="px-4 py-2 text-sm font-medium rounded-lg transition-colors" style={{ backgroundColor: theme.text, color: theme.background }}>
                                         Créer un quiz
                                     </button>
                                 </Link>
@@ -363,7 +366,7 @@ export default function DashboardClient() {
                     {!isLoadingExams && exams.length > 0 && (
                         <section className="mt-12">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl font-serif font-medium text-white">Vos examens blancs</h2>
+                                <h2 className="text-xl font-serif font-medium" style={{ color: theme.text }}>Vos examens blancs</h2>
                             </div>
                             <ExamsList exams={exams} onDelete={handleExamDeleted} />
                         </section>

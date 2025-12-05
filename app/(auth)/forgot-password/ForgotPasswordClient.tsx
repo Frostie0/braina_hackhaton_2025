@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
-import { serverIp } from '@/lib/serverIp';
+import serverIp from '@/lib/serverIp';
 import ApplicationLogo from '@/components/ui/ApplicationLogo';
 import { ArrowLeft } from 'lucide-react';
 

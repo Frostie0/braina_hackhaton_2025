@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { shuffle } from "@/lib/shuffle";
-import { serverIp } from "@/lib/serverIp";
+import serverIp from "@/lib/serverIp";
 import QuizScreen from "@/app/(pages)/quiz/QuizScreen";
 import FlashcardScreen from "@/app/(pages)/flashcard/flashcardScreen";
 import TicTacToeMultiplayerScreen from "./TicTacToeMultiplayerScreen";
