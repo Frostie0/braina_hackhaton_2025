@@ -306,17 +306,18 @@ export default function DashboardClient() {
                                     description="Transformez vos notes en matériel d'étude interactif."
                                 />
                             </Link>
-                            <Link href='/generate-exam'>
-                                <QuickStartCard
-                                    icon={ScrollText}
-                                    title="Examen blanc"
-                                    description="Préparez-vous avec des examens types personnalisés."
-                                />
-                            </Link>
+                            {/* <Link href='/generate-exam'> */}
+                            <QuickStartCard
+                                icon={ScrollText}
+                                title="Examen blanc"
+                                description="Préparez-vous avec des examens types personnalisés."
+                                comingSoon={true}
+                            />
+                            {/* </Link> */}
                             <QuickStartCard
                                 icon={BookOpen}
                                 title="Tournoi"
-                                description="Défiez vos camarades et grimpez dans le classement."
+                                description="Participe à des compétitions inter-classe et inter-département."
                                 comingSoon={true}
                             />
                         </div>
@@ -363,14 +364,14 @@ export default function DashboardClient() {
                     </section>
 
                     {/* SECTION: EXAMENS BLANCS */}
-                    {!isLoadingExams && exams.length > 0 && (
+                    {/* {!isLoadingExams && exams.length > 0 && (
                         <section className="mt-12">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-serif font-medium" style={{ color: theme.text }}>Vos examens blancs</h2>
                             </div>
                             <ExamsList exams={exams} onDelete={handleExamDeleted} />
                         </section>
-                    )}
+                    )} */}
 
                     {/* Panneau de droite sur Mobile (affiché en bas du contenu) */}
                     <div className="mt-12 lg:hidden">

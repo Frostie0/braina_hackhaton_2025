@@ -203,17 +203,18 @@ export default function DashboardContent() {
                             description="Transformez vos notes en matériel d'étude interactif."
                         />
                     </Link>
-                    <Link href='/generate-exam'>
-                        <QuickStartCard
-                            icon={ScrollText}
-                            title="Examen blanc"
-                            description="Préparez-vous avec des examens types personnalisés."
-                        />
-                    </Link>
+                    {/* <Link href='/generate-exam'> */}
+                    <QuickStartCard
+                        icon={ScrollText}
+                        title="Examen blanc"
+                        description="Préparez-vous avec des examens types personnalisés."
+                        comingSoon={true}
+                    />
+                    {/* </Link> */}
                     <QuickStartCard
                         icon={BookOpen}
                         title="Tournoi"
-                        description="Défiez vos camarades et grimpez dans le classement."
+                        description="Participe à des compétitions inter-classe et inter-département. Remporte des récompenses tout en révisant et en te préparant pour réussir tes examens."
                         comingSoon={true}
                     />
                 </div>
