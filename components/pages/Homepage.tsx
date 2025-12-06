@@ -268,9 +268,8 @@ const TypingText = () => {
 
     const titles = [
         "Réussissez vos examens",
-        "Étudiez plus efficacement",
+        "Étudiez plus intelligemment",
         "Révisez en défiant vos amis",
-        "Mémorisez en vous amusant"
     ];
 
     const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
@@ -332,7 +331,7 @@ const Hero = () => {
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-yellow-400"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
                         </span>
-                        <span className="text-sm font-bold text-yellow-500">Gagnant du Hackathon Ayiti.ai 2025</span>
+                        <span className="text-sm font-bold text-yellow-500">3ème gagnant du Hackathon Ayiti.ai 2025</span>
                     </div>
 
                     <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.1] mb-8 tracking-tight" style={{ color: theme.text }}>
@@ -359,7 +358,7 @@ const Hero = () => {
                         </Link>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                    {/* <div className="flex flex-col sm:flex-row gap-4 mb-12">
                         <div className="group relative">
                             <button className="flex items-center gap-3 px-6 py-3 rounded-xl border transition-all hover:bg-gray-100/5" style={{ backgroundColor: theme.cardBg, borderColor: theme.gray2 }}>
                                 <Apple size={24} className="text-white" />
@@ -385,7 +384,7 @@ const Hero = () => {
                                 Bientôt disponible
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     <div className="flex items-center gap-8 pt-8 border-t" style={{ borderColor: theme.gray2 }}>
                         <div className="flex -space-x-4">
@@ -645,18 +644,6 @@ const Features = () => {
                         <SectionHeading>Tout ce dont vous avez besoin pour réussir</SectionHeading>
                         <p className="text-xl" style={{ color: theme.textSecondary }}>Une suite d'outils IA complète pour transformer votre façon d'apprendre</p>
                     </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                    >
-                        <Link href="/register">
-                            <Button variant="secondary" className="gap-2">
-                                Voir toutes les fonctionnalités <ArrowRight size={16} />
-                            </Button>
-                        </Link>
-                    </motion.div>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-8">
@@ -915,15 +902,15 @@ const CTA = () => {
                                     <Sparkles className="w-5 h-5" />
                                 </button>
                             </Link>
-                            <Link href="/demo-exam-screen">
+                            {/* <Link href="/demo-exam-screen">
                                 <button className="h-16 px-10 rounded-full bg-purple-800/50 text-white border border-purple-400/30 font-bold text-lg hover:bg-purple-800/70 transition-colors backdrop-blur-sm flex items-center justify-center gap-2">
                                     Voir une démo
                                 </button>
-                            </Link>
+                            </Link> */}
                         </div>
 
                         <p className="text-sm text-purple-200 mt-10 font-medium opacity-80">
-                            ✓ Gratuit pour toujours • ✓ Aucune carte bancaire • ✓ Configuration en 2 minutes
+                            Gratuit pour toujours •  Aucune carte bancaire •  Configuration en 2 minutes
                         </p>
                     </div>
                 </motion.div>
@@ -988,7 +975,7 @@ const Footer = () => {
                 </div>
 
                 <div className="pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-6" style={{ borderColor: theme.gray2 }}>
-                    <p className="text-sm font-medium" style={{ color: theme.textSecondary }}>© 2025 Braina. Tous droits réservés.</p>
+                    <p className="text-sm font-medium" style={{ color: theme.textSecondary }}>© 2025 Braina.ai Tous droits réservés.</p>
                     <div className="flex gap-8 text-sm font-medium" style={{ color: theme.textSecondary }}>
                         <span className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -1008,7 +995,7 @@ const UserTypes = () => {
         {
             title: "Étudiants",
             subtitle: "Boostez vos révisions",
-            description: "Transformez vos notes en quiz interactifs et préparez vos examens avec efficacité. Braina s'adapte à votre rythme d'apprentissage.",
+            description: "Apprenez de manière plus intelligente. Profitez de quiz, de fiches et de notes générés par l'IA, adaptés à vos besoins d'apprentissage uniques. Économisez du temps, améliorez la rétention, réussissez vos examens avec facilité et défie tes amis en mode multijoueur.",
             icon: GraduationCap,
             color: "text-blue-500",
             bg: "bg-blue-500/10",
@@ -1017,7 +1004,7 @@ const UserTypes = () => {
         {
             title: "Professeurs",
             subtitle: "Gagnez du temps",
-            description: "Créez des évaluations instantanées à partir de vos supports de cours. Suivez les progrès de vos élèves et identifiez les lacunes.",
+            description: "Élevez votre enseignement avec la génération de quiz, d'évaluations et d'examens alimentée par l'IA. Économisez du temps sur la création de contenu, la notation et améliorez l'engagement des étudiants.",
             icon: Presentation,
             color: "text-purple-500",
             bg: "bg-purple-500/10",
@@ -1026,7 +1013,7 @@ const UserTypes = () => {
         {
             title: "Entreprises",
             subtitle: "Formez vos équipes",
-            description: "Optimisez la formation continue et l'onboarding. Évaluez les compétences de vos collaborateurs avec des tests générés par IA.",
+            description: "Créez rapidement des évaluations pour développer les connaissances et évaluer les compétences. Que ce soit pour dispenser des formations, concevoir des cours ou délivrer des certifications, nous avons la solution.",
             icon: Building2,
             color: "text-green-500",
             bg: "bg-green-500/10",
@@ -1060,12 +1047,12 @@ const UserTypes = () => {
                                 <user.icon size={28} />
                             </div>
                             <h3 className="text-2xl font-bold mb-2" style={{ color: theme.text }}>{user.title}</h3>
-                            <p className="text-sm font-bold uppercase tracking-wide mb-4 opacity-70" style={{ color: theme.accent }}>{user.subtitle}</p>
+                            <p className="text-sm font-medium uppercase tracking-wide mb-4 opacity-70" style={{ color: theme.accent }}>{user.subtitle}</p>
                             <p className="leading-relaxed mb-8" style={{ color: theme.textSecondary }}>{user.description}</p>
 
-                            <div className="flex items-center gap-2 font-bold text-sm group-hover:gap-3 transition-all cursor-pointer" style={{ color: theme.text }}>
+                            {/* <div className="flex items-center gap-2 font-bold text-sm group-hover:gap-3 transition-all cursor-pointer" style={{ color: theme.text }}>
                                 {user.action} <ArrowRight size={16} />
-                            </div>
+                            </div> */}
                         </motion.div>
                     ))}
                 </div>
@@ -1184,12 +1171,12 @@ const Homepage = () => {
                 <Hero />
                 {/* <TrustedBy /> */}
                 <Stats />
+                <HowItWorks />
                 <UserTypes />
                 <Features />
-                <HowItWorks />
                 <Testimonials />
                 <FAQ />
-                <SupportUs />
+                {/* <SupportUs /> */}
                 <CTA />
             </main>
             <Footer />
