@@ -268,8 +268,8 @@ const TypingText = () => {
 
     const titles = [
         "Réussissez vos examens",
-        "Étudiez plus intelligemment",
-        "Révisez en défiant vos amis",
+        // "Étudiez plus intelligemment",
+        // "Révisez en défiant vos amis",
     ];
 
     const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
