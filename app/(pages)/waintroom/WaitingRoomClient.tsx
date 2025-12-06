@@ -311,6 +311,12 @@ export default function WaitingRoomClient() {
               <div className="text-3xl font-semibold tracking-widest text-center py-4 select-all">
                 {room}
               </div>
+              {/* <button
+                onClick={handleShareLink}
+                className="w-full mt-3 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white text-black hover:bg-gray-200"
+              >
+                <Link2 className="w-4 h-4" /> Partager le lien d&apos;invitation
+              </button> */}
               <div className="mt-3 text-sm text-gray-400 text-center">
                 Max joueurs: {maxPlayers}
               </div>
@@ -333,12 +339,12 @@ export default function WaitingRoomClient() {
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500" />
                       <div>
                         <div className="font-medium">
-                          {p.name || `Joueur ${p.id.slice(0, 6)}`}
+                          {p.name || `Joueur ${p.id}`}
                         </div>
                         <div className="text-xs text-gray-400">Prêt</div>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-400">#{p.id.slice(0, 4)}</div>
+                    <div className="text-xs text-gray-400">#{p.id}</div>
                   </div>
                 ))}
               </div>
@@ -348,33 +354,13 @@ export default function WaitingRoomClient() {
                   onClick={() => {
                     try {
                       const connected = !!socketRef.current?.connected;
-                      const currentQuizId = quizIdRef.current;
-
-                      // Vérifications avant de démarrer
-                      if (!connected) {
-                        console.error("❌ Socket non connecté");
-                        return;
-                      }
-
-                      if (!currentQuizId) {
-                        console.error("❌ Quiz ID manquant");
-                        return;
-                      }
-
-                      console.log("▶️ Start button clicked", {
-                        connected,
-                        room,
-                        quizId: currentQuizId
-                      });
-
+                      console.log("▶️ Start button clicked", { connected, room, quizId: quizIdRef.current });
                       socketRef.current?.emit("start_game", { gameCode: room });
-
-                      // Fallback avec gestion de double navigation
-                      let hasNavigated = false;
-                      const timeoutId = setTimeout(() => {
-                        if (!hasNavigated) {
-                          console.log("⏱️ Fallback timeout - navigation forcée");
-                          hasNavigated = true;
+                      // Fallback: si aucun event 'game_started' ne vient dans 1200ms, on navigue quand même côté hôte
+                      const currentQuizId = quizIdRef.current;
+                      if (currentQuizId) {
+                        setTimeout(() => {
+                          // Si on est encore sur la waiting room, on force la navigation
                           const query = new URLSearchParams({
                             questions: String(questions),
                             shuffle: "true",
@@ -382,27 +368,13 @@ export default function WaitingRoomClient() {
                             isHost: String(isHost),
                           }).toString();
                           router.push(`/play/multiplayer/${currentQuizId}?${query}`);
-                        }
-                      }, 1200);
-
-                      // Nettoyer le timeout si nécessaire
-                      // (à appeler dans le listener game_started)
-                      window.__gameStartTimeout = timeoutId;
-
-                    } catch (error) {
-                      console.error("❌ Erreur au démarrage:", error);
-                    }
+                        }, 1200);
+                      }
+                    } catch { }
                   }}
-                  disabled={players.length === 0 || status !== "connected"}
-                  className={`w-full mt-6 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition ${players.length === 0 || status !== "connected"
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed opacity-50"
-                    : "bg-white text-black hover:bg-gray-200"
-                    }`}
+                  className={`w-full mt-6 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition bg-white text-black hover:bg-gray-200`}
                 >
-                  <PlayCircle className="w-5 h-5" />
-                  {players.length === 0
-                    ? "En attente de joueurs..."
-                    : "Démarrer la partie"}
+                  <PlayCircle className="w-5 h-5" /> Démarrer la partie
                 </button>
               )}
             </div>
