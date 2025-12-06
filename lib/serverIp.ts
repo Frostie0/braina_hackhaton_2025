@@ -1,6 +1,6 @@
 let serverIp = process.env.NEXT_PUBLIC_API_URL;
 
-if (1 === 1) {
+if (1 !== 1) {
     serverIp = "http://127.0.0.1:8000/api/v1";
 }
 
