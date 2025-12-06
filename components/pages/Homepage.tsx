@@ -83,8 +83,8 @@ const Navbar = () => {
         >
             <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2">
-                    <ApplicationLogo size={48} withText={false} />
-                    <span className="text-xl font-bold hidden sm:block" style={{ color: theme.text }}>Braina</span>
+                    <ApplicationLogo size={48} withText={false} className="hidden sm:block" />
+                    <span className="text-xl font-bold" style={{ color: theme.text }}>Braina</span>
                 </Link>
 
                 {/* Desktop Menu */}
@@ -303,7 +303,7 @@ const TypingText = () => {
     }, [displayedText, isDeleting, currentTitleIndex]);
 
     return (
-        <span className="inline-block min-w-[300px]">
+        <span className="inline-block w-full min-h-[120px] sm:min-h-[90px] md:min-h-[80px] leading-tight align-top">
             {displayedText}
             <span className="animate-pulse ml-1" style={{ color: theme.accent }}>|</span>
         </span>
@@ -333,9 +333,9 @@ const Hero = () => {
                         </span>
                         <span className="text-sm font-bold text-yellow-500">3ème gagnant du Hackathon Ayiti.ai 2025</span>
                     </div>
-
+                    {/* <TypingText /> */}
                     <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.1] mb-8 tracking-tight" style={{ color: theme.text }}>
-                        <TypingText /> <br />
+                        Réussissez vos examens<br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">avec Braina.</span>
                     </h1>
 
