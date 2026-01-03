@@ -64,64 +64,118 @@ const getInitials = (name: string) => {
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [activeSection, setActiveSection] = useState('');
     const { user, isAuthenticated, loading } = useAuth();
     const { theme, mode } = useTheme();
 
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
+
+            // Detect active section based on scroll position
+            const sections = ['features', 'how-it-works', 'faq'];
+            const scrollPosition = window.scrollY;
+
+            // If at top of page, no section is active
+            if (scrollPosition < 100) {
+                setActiveSection('');
+                return;
+            }
+
+            // Find the current active section
+            // We want the section that is currently most visible in the viewport
+            let currentSection = '';
+            let closestDistance = Infinity;
+
+            sections.forEach((sectionId) => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    const elementTop = rect.top + scrollPosition;
+
+                    // Calculate distance from the top of viewport (accounting for navbar height)
+                    const distance = Math.abs(elementTop - scrollPosition - 100);
+
+                    // If this section is in view and closer than previous closest
+                    if (rect.top <= 150 && rect.bottom >= 0 && distance < closestDistance) {
+                        closestDistance = distance;
+                        currentSection = `#${sectionId}`;
+                    }
+                }
+            });
+
+            if (currentSection) {
+                setActiveSection(currentSection);
+            }
+        };
+
+        handleScroll(); // Initial check
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
         <nav
-            className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'backdrop-blur-xl shadow-lg' : 'backdrop-blur-sm'}`}
+            className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'backdrop-blur-xl shadow-xl' : 'backdrop-blur-md'}`}
             style={{
-                backgroundColor: scrolled ? (mode === 'dark' ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)') : 'transparent',
-                borderBottom: scrolled ? `1px solid ${theme.gray2}40` : 'none'
+                backgroundColor: scrolled ? (mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)') : 'rgba(0, 0, 0, 0.3)',
+                borderBottom: scrolled ? `1px solid ${theme.gray2}60` : `1px solid rgba(255, 255, 255, 0.1)`
             }}
         >
             <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2">
-                    <ApplicationLogo size={48} withText={false} className="hidden sm:block" />
-                    <span className="text-xl font-bold" style={{ color: theme.text }}>Braina</span>
+                <Link href="/" className="flex items-center gap-2 group">
+                    <ApplicationLogo size={48} withText={false} className="hidden sm:block transition-transform group-hover:scale-110 duration-300" />
+                    <span className="text-xl font-bold transition-colors group-hover:text-purple-400 duration-300" style={{ color: theme.text }}>Braina</span>
                 </Link>
 
                 {/* Desktop Menu */}
-                <div className="hidden md:flex items-center space-x-1 bg-opacity-50 p-1 rounded-full px-6" style={{ backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
+                <div className="hidden md:flex items-center space-x-1 bg-opacity-50 p-1.5 rounded-full px-4 border" style={{
+                    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                }}>
                     {[
                         { name: 'Fonctionnalités', href: '#features' },
                         { name: 'Comment ça marche', href: '#how-it-works' },
                         { name: 'FAQ', href: '#faq' }
-                    ].map((item) => (
-                        <a
-                            key={item.name}
-                            href={item.href}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-colors hover:bg-purple-500/10 hover:text-purple-500"
-                            style={{ color: theme.textSecondary }}
-                        >
-                            {item.name}
-                        </a>
-                    ))}
+                    ].map((item) => {
+                        const isActive = activeSection === item.href;
+                        return (
+                            <a
+                                key={item.name}
+                                href={item.href}
+                                className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                                    isActive
+                                        ? 'text-white shadow-lg'
+                                        : 'hover:bg-purple-500/10 hover:text-purple-400'
+                                }`}
+                                style={{
+                                    color: isActive ? 'white' : theme.textSecondary,
+                                    backgroundColor: isActive ? theme.accent : 'transparent'
+                                }}
+                            >
+                                {item.name}
+                            </a>
+                        );
+                    })}
                 </div>
 
                 {/* Auth Buttons / User Profile */}
                 <div className="hidden md:flex items-center gap-4">
                     {isAuthenticated && user ? (
                         <Link href="/dashboard">
-                            <div className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border transition-all hover:shadow-lg hover:shadow-purple-500/20 group"
+                            <div className="flex items-center gap-3 pl-2 pr-4 py-2 rounded-full border-2 transition-all hover:shadow-xl hover:shadow-purple-500/30 hover:border-purple-500/50 group"
                                 style={{
                                     backgroundColor: theme.cardBg,
                                     borderColor: theme.gray2
                                 }}>
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold shadow-md transform group-hover:scale-110 transition-transform"
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-purple-500/20 transform group-hover:scale-110 group-hover:ring-purple-500/40 transition-all duration-300"
                                     style={{ backgroundColor: theme.accent }}>
                                     <span className="text-xs">
                                         {loading ? '...' : getInitials(user.name)}
                                     </span>
                                 </div>
                                 <div className="hidden lg:block">
-                                    <p className="text-sm font-bold truncate max-w-[100px]" style={{ color: theme.text }}>
+                                    <p className="text-sm font-bold truncate max-w-[100px] group-hover:text-purple-400 transition-colors" style={{ color: theme.text }}>
                                         {loading ? 'Chargement...' : user.name}
                                     </p>
                                 </div>
@@ -129,11 +183,11 @@ const Navbar = () => {
                         </Link>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link href="/login" className="text-sm font-bold hover:text-purple-500 transition-colors" style={{ color: theme.text }}>
+                            <Link href="/login" className="text-sm font-bold hover:text-purple-400 transition-all duration-300 px-4 py-2 rounded-lg hover:bg-white/5" style={{ color: theme.text }}>
                                 Se connecter
                             </Link>
                             <Link href="/register">
-                                <Button variant="primary" className="py-2.5 px-5 text-sm shadow-purple-500/20">
+                                <Button variant="primary" className="py-2.5 px-6 text-sm shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95">
                                     S'inscrire
                                 </Button>
                             </Link>
@@ -143,11 +197,11 @@ const Navbar = () => {
 
                 {/* Mobile Menu Button */}
                 <button
-                    className="md:hidden p-2 rounded-full hover:bg-gray-100/10 transition-colors"
+                    className="md:hidden p-2.5 rounded-xl hover:bg-white/10 transition-all duration-300 border border-transparent hover:border-white/20 active:scale-95"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     style={{ color: theme.text }}
                 >
-                    {isMenuOpen ? <X /> : <Menu />}
+                    {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
             </div>
 
@@ -161,23 +215,31 @@ const Navbar = () => {
                         className="md:hidden border-b overflow-hidden shadow-xl"
                         style={{ backgroundColor: theme.background, borderColor: theme.gray2 }}
                     >
-                        <div className="px-6 py-8 flex flex-col space-y-6">
+                        <div className="px-6 py-8 flex flex-col space-y-3">
                             {[
                                 { name: 'Fonctionnalités', href: '#features' },
                                 { name: 'Comment ça marche', href: '#how-it-works' },
                                 { name: 'FAQ', href: '#faq' }
-                            ].map((item) => (
-                                <a
-                                    key={item.name}
-                                    href={item.href}
-                                    className="text-lg font-medium hover:text-purple-500 flex items-center justify-between"
-                                    style={{ color: theme.text }}
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    {item.name}
-                                    <ChevronRight size={16} className="text-gray-400" />
-                                </a>
-                            ))}
+                            ].map((item) => {
+                                const isActive = activeSection === item.href;
+                                return (
+                                    <a
+                                        key={item.name}
+                                        href={item.href}
+                                        className={`relative text-lg font-semibold flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 ${
+                                            isActive ? 'shadow-lg' : 'hover:bg-white/5'
+                                        }`}
+                                        style={{
+                                            color: isActive ? 'white' : theme.text,
+                                            backgroundColor: isActive ? theme.accent : 'transparent'
+                                        }}
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <span>{item.name}</span>
+                                        <ChevronRight size={20} className={isActive ? 'text-white' : 'text-gray-400'} />
+                                    </a>
+                                );
+                            })}
 
                             <div className="h-px w-full bg-gray-200/10" />
 
@@ -966,7 +1028,7 @@ const Footer = () => {
                     <div>
                         <h4 className="font-bold text-lg mb-6" style={{ color: theme.text }}>Légal</h4>
                         <ul className="space-y-4" style={{ color: theme.textSecondary }}>
-                            <li><a href="#" className="hover:text-purple-500 transition-colors">Confidentialité</a></li>
+                            <li><Link href="/confidentialite" className="hover:text-purple-500 transition-colors">Confidentialité</Link></li>
                             <li><a href="#" className="hover:text-purple-500 transition-colors">CGU</a></li>
                             <li><a href="#" className="hover:text-purple-500 transition-colors">Mentions légales</a></li>
                             <li><a href="#" className="hover:text-purple-500 transition-colors">Cookies</a></li>

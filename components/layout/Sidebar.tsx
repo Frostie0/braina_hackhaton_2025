@@ -42,30 +42,50 @@ const SidebarItem: React.FC<{ icon: React.ElementType; label: string; isActive?:
     return (
         <div
             onClick={onClick}
-            className={`flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group`}
+            className={`relative flex items-center px-4 py-2.5 mx-2 rounded-lg cursor-pointer transition-all duration-200 group ${
+                isActive ? 'shadow-lg shadow-purple-500/10' : 'hover:bg-white/5'
+            }`}
             style={{
-                backgroundColor: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                backgroundColor: isActive ? 'rgba(147, 51, 234, 0.15)' : 'transparent',
                 color: isActive ? theme.white : theme.gray
             }}
         >
+            {/* Bordure gauche pour le lien actif */}
+            {isActive && (
+                <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
+                    style={{ backgroundColor: theme.accent }}
+                />
+            )}
             <Icon
-                className={`w-5 h-5 mr-3 transition-colors`}
+                className={`w-5 h-5 mr-3 transition-all duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}
                 style={{ color: isActive ? theme.accent : theme.gray }}
             />
-            <span className="text-sm tracking-wide">{label}</span>
+            <span className={`text-sm font-medium tracking-wide transition-colors ${isActive ? 'text-white' : ''}`}>
+                {label}
+            </span>
         </div>
     );
 };
 
-const ProfileMenuItem: React.FC<{ icon: React.ElementType; label: string; onClick?: () => void }> = ({ icon: Icon, label, onClick }) => (
-    <div
-        className="flex items-center px-4 py-2.5 hover:bg-white/10 cursor-pointer transition-colors group"
-        onClick={onClick}
-    >
-        <Icon className="w-4 h-4 mr-3 text-gray-400 group-hover:text-white transition-colors" />
-        <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{label}</span>
-    </div>
-);
+const ProfileMenuItem: React.FC<{ icon: React.ElementType; label: string; onClick?: () => void; isDanger?: boolean }> = ({ icon: Icon, label, onClick, isDanger }) => {
+    const { theme } = useTheme();
+    return (
+        <div
+            className={`flex items-center px-4 py-2.5 mx-1 my-0.5 rounded-lg cursor-pointer transition-all duration-200 group ${
+                isDanger ? 'hover:bg-red-500/10' : 'hover:bg-white/10'
+            }`}
+            onClick={onClick}
+        >
+            <Icon className={`w-4 h-4 mr-3 transition-colors ${
+                isDanger ? 'text-red-400 group-hover:text-red-300' : 'text-gray-400 group-hover:text-purple-400'
+            }`} />
+            <span className={`text-sm font-medium transition-colors ${
+                isDanger ? 'text-red-400 group-hover:text-red-300' : 'text-gray-300 group-hover:text-white'
+            }`}>{label}</span>
+        </div>
+    );
+};
 
 const dropdownVariants: Variants = {
     hidden: { opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.2 } },
@@ -73,6 +93,8 @@ const dropdownVariants: Variants = {
 };
 
 const ProfileDropdownMenu: React.FC<{ onNavigate: (path: string) => void; onLogout: () => void }> = ({ onNavigate, onLogout }) => {
+    const { theme } = useTheme();
+
     const handleMenuClick = (label: string) => {
         switch (label) {
             case 'Paramètres':
@@ -91,20 +113,26 @@ const ProfileDropdownMenu: React.FC<{ onNavigate: (path: string) => void; onLogo
 
     return (
         <motion.div
-            className="absolute bottom-[70px] left-2 right-2 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-20"
+            className="absolute bottom-[85px] left-2 right-2 border rounded-xl shadow-2xl overflow-hidden z-20 backdrop-blur-xl"
+            style={{ backgroundColor: 'rgba(26, 26, 26, 0.95)', borderColor: theme.gray2 }}
             initial="hidden"
             animate="visible"
             exit="hidden"
             variants={dropdownVariants}
         >
-            <div className="py-1">
-                {profileMenuItems.map((item) => (
-                    <ProfileMenuItem
-                        key={item.label}
-                        icon={item.icon}
-                        label={item.label}
-                        onClick={() => handleMenuClick(item.label)}
-                    />
+            <div className="py-2">
+                {profileMenuItems.map((item, index) => (
+                    <React.Fragment key={item.label}>
+                        <ProfileMenuItem
+                            icon={item.icon}
+                            label={item.label}
+                            isDanger={item.label === 'Déconnexion'}
+                            onClick={() => handleMenuClick(item.label)}
+                        />
+                        {index === profileMenuItems.length - 2 && (
+                            <div className="h-px mx-2 my-1" style={{ backgroundColor: theme.gray2 }} />
+                        )}
+                    </React.Fragment>
                 ))}
             </div>
         </motion.div>
@@ -112,17 +140,24 @@ const ProfileDropdownMenu: React.FC<{ onNavigate: (path: string) => void; onLogo
 };
 
 // Header de la Sidebar
-const SidebarHeader: React.FC<{ onToggle?: () => void }> = ({ onToggle }) => (
-    <div className="flex items-center justify-between px-6 py-6">
-        <ApplicationLogo size={52} />
-        <button
-            onClick={onToggle}
-            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
-        >
-            <X className="w-5 h-5" />
-        </button>
-    </div>
-);
+const SidebarHeader: React.FC<{ onToggle?: () => void }> = ({ onToggle }) => {
+    const { theme } = useTheme();
+    return (
+        <div className="relative">
+            <div className="flex items-center justify-between px-6 py-6 border-b" style={{ borderColor: theme.gray2 }}>
+                <ApplicationLogo size={52} />
+                <button
+                    onClick={onToggle}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 lg:hidden transition-all duration-200 hover:rotate-90"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+            {/* Gradient decoratif */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+        </div>
+    );
+};
 
 // Les variantes de Framer Motion pour la sidebar
 const sidebarVariants: Variants = {
@@ -151,30 +186,39 @@ const UserProfileFooter: React.FC<{ onClick: () => void; isMenuOpen: boolean; us
     };
 
     return (
-        <div
-            className="flex items-center p-3 mx-2 mb-4 rounded-xl hover:bg-white/5 cursor-pointer transition-colors duration-200 group"
-            onClick={onClick}
-        >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/20">
-                <span className="text-xs font-bold text-white">
-                    {isLoading ? '...' : user ? getInitials(user.name) : 'G'}
-                </span>
+        <div className="relative border-t pt-4" style={{ borderColor: theme.gray2 }}>
+            {/* Gradient decoratif */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+
+            <div
+                className="flex items-center p-3 mx-2 mb-4 rounded-xl hover:bg-white/5 cursor-pointer transition-all duration-200 group border border-transparent hover:border-white/10"
+                onClick={onClick}
+            >
+                <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-900/30 group-hover:shadow-purple-500/40 transition-shadow ring-2 ring-purple-500/20">
+                    <span className="text-sm font-bold text-white">
+                        {isLoading ? '...' : user ? getInitials(user.name) : 'G'}
+                    </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate group-hover:text-purple-200 transition-colors" style={{ color: theme.text }}>
+                        {isLoading ? (
+                            'Chargement...'
+                        ) : user ? (
+                            user.name
+                        ) : (
+                            'Invité'
+                        )}
+                    </p>
+                    <p className="text-xs truncate font-medium" style={{ color: theme.gray }}>Compte & paramètres</p>
+                </div>
+                <motion.div
+                    animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                    transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+                    className="flex-shrink-0"
+                >
+                    <ChevronDown className="w-4 h-4 group-hover:text-purple-400 transition-colors" style={{ color: theme.gray }} />
+                </motion.div>
             </div>
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate group-hover:text-purple-200 transition-colors" style={{ color: theme.text }}>
-                    {isLoading ? (
-                        'Chargement...'
-                    ) : user ? (
-                        user.name
-                    ) : (
-                        'Invité'
-                    )}
-                </p>
-                <p className="text-xs truncate" style={{ color: theme.gray }}>Compte & paramètres</p>
-            </div>
-            <motion.div animate={{ rotate: isMenuOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                <ChevronDown className="w-4 h-4 group-hover:text-gray-300" style={{ color: theme.gray }} />
-            </motion.div>
         </div>
     );
 };
@@ -186,6 +230,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
     const router = useRouter();
     const pathname = usePathname();
     const { theme } = useTheme();
+
+    // Helper function to check if a nav item is active
+    const isNavItemActive = (label: string): boolean => {
+        switch (label) {
+            case 'Accueil':
+                return pathname === '/dashboard';
+            case 'Générer':
+                return pathname === '/generate-quiz' || pathname === '/generate-exam';
+            case 'Analytics':
+                return pathname?.includes('/analytics') || false;
+            case 'Rejoindre une partie':
+                return pathname === '/multiplayer/join' || pathname?.includes('/waintroom') || false;
+            default:
+                return false;
+        }
+    };
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -240,7 +300,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                             key={item.label}
                             icon={item.icon}
                             label={item.label}
-                            isActive={item.label === 'Accueil' && pathname === '/dashboard' || item.label === 'Analytics' && pathname.includes('/analytics')}
+                            isActive={isNavItemActive(item.label)}
                             onClick={() => {
                                 if (item.label === 'Accueil') router.push('/dashboard');
                                 else if (item.label === 'Générer') router.push('/generate-quiz');
@@ -253,6 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpe
                     <SidebarItem
                         icon={BookOpen}
                         label="Rejoindre une partie"
+                        isActive={isNavItemActive('Rejoindre une partie')}
                         onClick={() => {
                             router.push('/multiplayer/join');
                             if (!isDesktop) setIsSidebarOpen(false);

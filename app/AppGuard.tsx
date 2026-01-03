@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/confidentialite",
 ];
 
 interface AppGuardProps {

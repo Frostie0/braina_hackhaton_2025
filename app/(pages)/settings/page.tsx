@@ -33,6 +33,7 @@ export default function SettingsPage() {
             items: [
                 { label: 'Profil public', value: 'Désactivé', action: () => { } },
                 { label: 'Données de progression', value: 'Privées', action: () => { } },
+                { label: 'Politique de confidentialité', value: 'Voir', action: () => router.push('/confidentialite') },
             ]
         },
         {
