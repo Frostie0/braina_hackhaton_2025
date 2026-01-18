@@ -64,10 +64,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         textSecondary: colors.gray,
     };
 
-    if (!mounted) {
-        return <>{children}</>;
-    }
-
     return (
         <ThemeContext.Provider value={{ theme: activeTheme, mode, toggleTheme }}>
             {children}

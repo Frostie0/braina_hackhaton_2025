@@ -23,13 +23,15 @@ export default function AppGuard({ children }: AppGuardProps) {
   const { isAuthenticated, loading } = useAuth();
   const [checked, setChecked] = useState(false);
 
+  // Vérification synchrone pour les routes publiques
+  const isPublic = pathname ? PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  ) : false;
+
   useEffect(() => {
     if (!pathname) return;
 
-    const isPublic = PUBLIC_PATHS.some(
-      (path) => pathname === path || pathname.startsWith(`${path}/`)
-    );
-
+    // Si c'est public, on a déjà rendu, rien à faire de plus pour la redirection
     if (isPublic) {
       setChecked(true);
       return;
@@ -41,8 +43,14 @@ export default function AppGuard({ children }: AppGuardProps) {
     }
 
     setChecked(true);
-  }, [pathname, isAuthenticated, loading, router]);
+  }, [pathname, isAuthenticated, loading, router, isPublic]);
 
+  // Si c'est une route publique, on rend directement les enfants (SSR friendly)
+  if (isPublic) {
+    return <>{children}</>;
+  }
+
+  // Pour les routes protégées, on attend la vérification
   if (!checked && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
