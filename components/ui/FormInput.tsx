@@ -13,6 +13,7 @@ interface FormInputProps {
     error?: string;
     required?: boolean;
     className?: string;
+    icon?: React.ElementType;
 }
 
 /**
@@ -28,10 +29,11 @@ export const FormInput: React.FC<FormInputProps> = ({
     error,
     required = true,
     className = '',
+    icon: Icon,
 }) => {
-    const baseInputClasses = `w-full h-11 rounded-xl bg-gray-900/60 border px-4 text-white placeholder-gray-500 outline-none transition duration-300 ${error
-            ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/30'
-            : 'border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30'
+    const baseInputClasses = `w-full h-11 rounded-xl bg-gray-900/60 border ${Icon ? 'pl-10' : 'px-4'} pr-4 text-white placeholder-gray-500 outline-none transition duration-300 ${error
+        ? 'border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/30'
+        : 'border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30'
         }`;
 
     return (
@@ -43,16 +45,23 @@ export const FormInput: React.FC<FormInputProps> = ({
                 </label>
             )}
 
-            <motion.input
-                id={id}
-                type={type}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                className={baseInputClasses}
-                required={required}
-                whileFocus={{ scale: 1.01 }}
-            />
+            <div className="relative">
+                {Icon && (
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                        <Icon className="w-5 h-5" />
+                    </div>
+                )}
+                <motion.input
+                    id={id}
+                    type={type}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    className={baseInputClasses}
+                    required={required}
+                    whileFocus={{ scale: 1.01 }}
+                />
+            </div>
 
             {/* Message d'erreur */}
             {error && (
